@@ -14,7 +14,7 @@ from window import *
 from global_hotkeys.keycodes import vk_key_names
 from win32 import win32api
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 modifier_keys = ["left_control", "right_control",
                  "left_shift", "right_shift", "left_menu", "right_menu"]
@@ -247,7 +247,7 @@ class EasyMultiApp(tk.Tk):
             y_entry.config(width=4)
             y_entry.insert(0, str(self._window_size[1]))
             y_entry.grid(row=0, column=2)
-            
+
             def done():
                 try:
                     x = int(x_entry.get())
@@ -257,18 +257,20 @@ class EasyMultiApp(tk.Tk):
                     y = int(y_entry.get())
                 except:
                     y = 1080
-                self._options_json["window_size"]=[x,y]
+                self._options_json["window_size"] = [x, y]
                 self._refresh_options()
                 exit_wst()
-            
-            tk.Button(window_size_tl,text=" Ok ",command=done).grid(row=100,column=0,padx=5,pady=5)
+
+            tk.Button(window_size_tl, text=" Ok ", command=done).grid(
+                row=100, column=0, padx=5, pady=5)
             window_size_tl.focus()
+
             def tick():
-                window_size_tl.after(50,tick)
+                window_size_tl.after(50, tick)
                 if window_size_tl.focus_displayof() is None:
                     exit_wst()
-            window_size_tl.after(50,tick)
-            
+            window_size_tl.after(50, tick)
+
     def _reset_keypress(self) -> None:
         threading.Thread(target=self._run_macro).start()
 
@@ -318,14 +320,15 @@ class EasyMultiApp(tk.Tk):
                     self._log("Resetting...")
                     next_window_index = self._windows.index(
                         window_to_reset) + 1
-                    next_window: Window = self._windows[0 if next_window_index >= len(
-                        self._windows) else next_window_index]
+                    next_window_index = 0 if next_window_index >= len(
+                        self._windows) else next_window_index
+                    next_window: Window = self._windows[next_window_index]
                     keyboard.press_and_release("esc")
                     keyboard.press_and_release("shift+tab")
                     keyboard.press_and_release("enter")
-                    keyboard.press("alt+"+str(next_window_index))
+                    keyboard.press("alt+"+str(next_window_index+1))
                     time.sleep(0.1)
-                    keyboard.release("alt+"+str(next_window_index))
+                    keyboard.release("alt+"+str(next_window_index+1))
                     next_window.untiny(self._window_size)
                     next_window.activate()
                     time.sleep(0.1)
@@ -411,7 +414,6 @@ def main():
     try:
         ema = EasyMultiApp()
         ema.mainloop()
-        print("hello")
     except:
         import tkinter.messagebox
         tkinter.messagebox.showerror(
