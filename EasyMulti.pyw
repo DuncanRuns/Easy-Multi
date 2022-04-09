@@ -195,6 +195,7 @@ class EasyMultiApp(tk.Tk):
 
     def _set_reset_thread(self) -> None:
         if not self._changing_something:
+            global_hotkeys.stop_checking_hotkeys()
             self._log("Setting hotkey, press ESC to cancel.")
             self._changing_something = True
             self._reset_dis_var.set("Reset:\n...")
@@ -209,6 +210,7 @@ class EasyMultiApp(tk.Tk):
 
     def _set_hide_thread(self) -> None:
         if not self._changing_something:
+            global_hotkeys.stop_checking_hotkeys()
             self._log("Setting hotkey, press ESC to cancel.")
             self._changing_something = True
             self._hide_dis_var.set("Hide:\n...")
