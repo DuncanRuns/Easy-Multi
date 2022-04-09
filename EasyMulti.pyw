@@ -11,38 +11,9 @@ import clipboard
 import threading
 
 from window import *
-from global_hotkeys.keycodes import vk_key_names
-from win32 import win32api
+from key_util import *
 
-VERSION = "1.0.2"
-
-modifier_keys = ["left_control", "right_control",
-                 "left_shift", "right_shift", "left_menu", "right_menu"]
-
-
-def read_hotkey(should_continue_call=None) -> list:
-    found_key = ""
-    name_key_list = vk_key_names.items()
-    while found_key == "" and (should_continue_call is None or should_continue_call()):
-        time.sleep(0.01)
-        for name, vk_value in name_key_list:
-            if not (name.endswith("control") or name.endswith("alt") or name.endswith("shift") or name.endswith("menu")):
-                if win32api.GetAsyncKeyState(vk_value) < 0:
-                    keylist = []
-                    for modifier in modifier_keys:
-                        if win32api.GetAsyncKeyState(vk_key_names[modifier]) < 0:
-                            keylist.append(modifier)
-                    keylist.append(name)
-                    return keylist
-
-
-def format_hotkey(hotkey: list) -> str:
-    string = ""
-    for i in hotkey:
-        if string != "":
-            string += " + "
-        string += i.replace("_", " ").title()
-    return string
+VERSION = "1.0.3"
 
 
 def resource_path(relative_path):
@@ -275,9 +246,13 @@ class EasyMultiApp(tk.Tk):
             window_size_tl.after(50, tick)
 
     def _reset_keypress(self) -> None:
+        if are_any_keys_pressed(get_invalid_modifiers(self._reset_hotkey)):
+            return
         threading.Thread(target=self._run_macro).start()
 
     def _hide_keypress(self) -> None:
+        if are_any_keys_pressed(get_invalid_modifiers(self._hide_hotkey)):
+            return
         current_window = get_current_window()
         if current_window in self._windows:
             for window in self._windows:

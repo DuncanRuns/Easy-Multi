@@ -64,3 +64,8 @@ def get_all_mc_windows(old_windows=[]) -> list:
 
 def get_current_window() -> Window:
     return Window(hwnd_util.get_current_hwnd())
+
+
+if __name__ == "__main__":
+    import os
+    os.system("python EasyMulti.pyw")
