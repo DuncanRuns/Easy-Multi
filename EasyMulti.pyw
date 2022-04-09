@@ -14,7 +14,7 @@ from window import *
 from global_hotkeys.keycodes import vk_key_names
 from win32 import win32api
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 
 modifier_keys = ["left_control", "right_control",
                  "left_shift", "right_shift", "left_menu", "right_menu"]
@@ -22,10 +22,11 @@ modifier_keys = ["left_control", "right_control",
 
 def read_hotkey(should_continue_call=None) -> list:
     found_key = ""
+    name_key_list = vk_key_names.items()
     while found_key == "" and (should_continue_call is None or should_continue_call()):
         time.sleep(0.01)
-        for name, vk_value in [(i, vk_key_names[i]) for i in vk_key_names.keys()]:
-            if (not name.endswith("control")) and (not name.endswith("alt")) and (not name.endswith("shift")) and (not name.endswith("menu")):
+        for name, vk_value in name_key_list:
+            if not (name.endswith("control") or name.endswith("alt") or name.endswith("shift") or name.endswith("menu")):
                 if win32api.GetAsyncKeyState(vk_value) < 0:
                     keylist = []
                     for modifier in modifier_keys:
@@ -162,7 +163,7 @@ class EasyMultiApp(tk.Tk):
     def _init_widgets(self) -> None:
         buttons_frame = tk.LabelFrame(self)
         buttons_frame.grid(row=0, column=0, padx=5, pady=5, sticky="nes")
-        tk.Button(buttons_frame, text="Setup Instances", command=self._setup_button).grid(
+        tk.Button(buttons_frame, text="Find Instances", command=self._setup_button).grid(
             row=0, column=0, padx=5, pady=5, sticky="NESW")
         tk.Button(buttons_frame, text="Go Borderless", command=self._try_borderless_button).grid(
             row=1, column=0, padx=5, pady=5, sticky="NESW")
@@ -276,9 +277,10 @@ class EasyMultiApp(tk.Tk):
 
     def _hide_keypress(self) -> None:
         current_window = get_current_window()
-        for window in self._windows:
-            if window != current_window:
-                window.tiny()
+        if current_window in self._windows:
+            for window in self._windows:
+                if window != current_window:
+                    window.tiny()
 
     def _validate_windows(self) -> None:
         for window in self._windows:
@@ -317,27 +319,40 @@ class EasyMultiApp(tk.Tk):
                 self._validate_windows()
                 window_to_reset = get_current_window()
                 if window_to_reset in self._windows:
-                    self._log("Resetting...")
-                    next_window_index = self._windows.index(
-                        window_to_reset) + 1
-                    next_window_index = 0 if next_window_index >= len(
-                        self._windows) else next_window_index
-                    next_window: Window = self._windows[next_window_index]
-                    keyboard.press_and_release("esc")
-                    keyboard.press_and_release("shift+tab")
-                    keyboard.press_and_release("enter")
-                    keyboard.press("alt+"+str(next_window_index+1))
-                    time.sleep(0.1)
-                    keyboard.release("alt+"+str(next_window_index+1))
-                    next_window.untiny(self._window_size)
-                    next_window.activate()
-                    time.sleep(0.1)
-                    keyboard.press_and_release("esc")
+                    if len(self._windows) == 1:
+                        self._run_macro_single(window_to_reset)
+                    else:
+                        self._run_macro_multi(window_to_reset)
                 self._running = False
         except:
             self._log("Error during reset: \n" +
                       traceback.format_exc().replace("\n", "\\n"))
             self._running = False
+
+    def _run_macro_single(self, window_to_reset: Window) -> None:
+        self._log("Resetting (Single)...")
+        keyboard.press_and_release("esc")
+        keyboard.press_and_release("shift+tab")
+        keyboard.press_and_release("enter")
+        window_to_reset.untiny(self._window_size)
+
+    def _run_macro_multi(self, window_to_reset: Window) -> None:
+        self._log("Resetting...")
+        next_window_index = self._windows.index(
+            window_to_reset) + 1
+        next_window_index = 0 if next_window_index >= len(
+            self._windows) else next_window_index
+        next_window: Window = self._windows[next_window_index]
+        keyboard.press_and_release("esc")
+        keyboard.press_and_release("shift+tab")
+        keyboard.press_and_release("enter")
+        keyboard.press("alt+"+str(next_window_index+1))
+        time.sleep(0.1)
+        keyboard.release("alt+"+str(next_window_index+1))
+        next_window.untiny(self._window_size)
+        next_window.activate()
+        time.sleep(0.1)
+        keyboard.press_and_release("esc")
 
     def _log(self, txt: str) -> None:
         for new_line in [i.rstrip() for i in txt.split("\n")]:
@@ -364,9 +379,9 @@ class EasyMultiApp(tk.Tk):
         try:
             self._abandon_windows()
             windows = get_all_mc_windows()
-            if len(windows) <= 1:
+            if len(windows) <= 0:
                 self._log(
-                    "Found 1 or less minecraft instances open.")
+                    "Found no Minecraft instances open.")
             else:
                 self._set_windows(windows)
                 self._log("Found "+str(len(windows)) +
