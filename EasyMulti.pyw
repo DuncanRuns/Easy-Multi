@@ -163,7 +163,7 @@ class EasyMultiApp(tk.Tk):
     def _init_widgets(self) -> None:
         buttons_frame = tk.LabelFrame(self)
         buttons_frame.grid(row=0, column=0, padx=5, pady=5, sticky="nes")
-        tk.Button(buttons_frame, text="Find Instances", command=self._setup_button).grid(
+        tk.Button(buttons_frame, text="Setup Instances", command=self._setup_button).grid(
             row=0, column=0, padx=5, pady=5, sticky="NESW")
         tk.Button(buttons_frame, text="Go Borderless", command=self._try_borderless_button).grid(
             row=1, column=0, padx=5, pady=5, sticky="NESW")
