@@ -13,7 +13,7 @@ import threading
 from window import *
 from key_util import *
 
-VERSION = "1.0.3"
+VERSION = "1.0.4"
 
 
 def resource_path(relative_path):
@@ -56,6 +56,9 @@ class IntEntry(tk.Entry):
 
 
 class EasyMultiApp(tk.Tk):
+    
+    # ------ init -----
+    
     def __init__(self):
         super().__init__()
 
@@ -81,32 +84,6 @@ class EasyMultiApp(tk.Tk):
         self._init_widgets()
         self._options_json = self._load_options_json()
         self._refresh_options()
-
-    def _exit(self, *args) -> None:
-        self._abandon_windows()
-        self.destroy()
-
-    @staticmethod
-    def _load_options_json() -> None:
-        try:
-            if not os.path.isfile("options.json"):
-                return {}
-            with open("options.json", "r") as options_file:
-                options_json = json.load(options_file)
-                options_file.close()
-            return options_json
-        except:
-            return {}
-
-    @staticmethod
-    def _save_options_json(options_json: dict) -> None:
-        with open("options.json", "w+") as options_file:
-            json.dump(options_json, options_file, indent=4)
-            options_file.close()
-
-    @staticmethod
-    def _get_setting(options_json: dict, key: str):
-        return options_json.get(key, DEFAULT_OPTIONS.get(key, None))
 
     def _refresh_options(self) -> None:
         self._setup_hotkeys()
@@ -136,7 +113,7 @@ class EasyMultiApp(tk.Tk):
         buttons_frame.grid(row=0, column=0, padx=5, pady=5, sticky="nes")
         tk.Button(buttons_frame, text="Setup Instances", command=self._setup_button).grid(
             row=0, column=0, padx=5, pady=5, sticky="NESW")
-        tk.Button(buttons_frame, text="Go Borderless", command=self._try_borderless_button).grid(
+        tk.Button(buttons_frame, text="Go Borderless", command=self._go_borderless_button).grid(
             row=1, column=0, padx=5, pady=5, sticky="NESW")
         tk.Button(buttons_frame, text="Restore Windows", command=self._restore_button).grid(
             row=2, column=0, padx=5, pady=5, sticky="NESW")
@@ -158,8 +135,16 @@ class EasyMultiApp(tk.Tk):
             row=1, column=0, columnspan=3, pady=3, sticky="we")
         tk.Label(log_frame, textvariable=self._total_var).grid(
             row=2, column=0, padx=5, pady=5, sticky="w")
-        tk.Button(log_frame, text="Copy Log", command=self.log_button).grid(
+        tk.Button(log_frame, text="Copy Log", command=self._copy_log_button).grid(
             row=2, column=2, padx=5, pady=5, sticky="e")
+
+    # ----- exit -----
+    
+    def _exit(self, *args) -> None:
+        self._abandon_windows()
+        self.destroy()
+
+    # ----- buttons -----
 
     def _set_reset_button(self, *args) -> None:
         threading.Thread(target=self._set_reset_thread).start()
@@ -245,49 +230,62 @@ class EasyMultiApp(tk.Tk):
                     exit_wst()
             window_size_tl.after(50, tick)
 
+    def _setup_button(self) -> None:
+        self._log("Running setup...")
+        try:
+            self._abandon_windows()
+            windows = get_all_mc_windows()
+            if len(windows) <= 0:
+                self._log(
+                    "Found no Minecraft instances open.")
+            else:
+                self._set_windows(windows)
+                self._log("Found "+str(len(windows)) +
+                          " minecraft instances.")
+                i = 0
+                for window in windows:
+                    i += 1
+                    window.set_title(str(i))
+        except:
+            self._log("Error during setup: \n" +
+                      traceback.format_exc().replace("\n", "\\n"))
+
+    def _copy_log_button(self) -> None:
+        clipboard.copy(self._log_var.get().replace("\\n", "\n"))
+
+    def _go_borderless_button(self) -> None:
+        if len(self._windows) == 0:
+            self._log("No instances yet, please run setup.")
+        else:
+            self._log("Setting borderless...")
+            try:
+                for window in self._windows:
+                    window.go_borderless(self._window_size)
+            except:
+                self._log("Error going borderless:\n" +
+                          traceback.format_exc().replace("\n", "\\n"))
+
+    def _restore_button(self) -> None:
+        if len(self._windows) == 0:
+            self._log("No instances yet, please run setup.")
+        else:
+            self._log("Restoring windows...")
+            try:
+                i = 0
+                for window in self._windows:
+                    i += 1
+                    window.restore_window(i)
+                    window.activate()
+            except:
+                self._log("Error on restoring windows:\n" +
+                          traceback.format_exc().replace("\n", "\\n"))
+
+    # ----- keypress -----
+
     def _reset_keypress(self) -> None:
         if are_any_keys_pressed(get_invalid_modifiers(self._reset_hotkey)):
             return
         threading.Thread(target=self._run_macro).start()
-
-    def _hide_keypress(self) -> None:
-        if are_any_keys_pressed(get_invalid_modifiers(self._hide_hotkey)):
-            return
-        current_window = get_current_window()
-        if current_window in self._windows:
-            for window in self._windows:
-                if window != current_window:
-                    window.tiny()
-
-    def _validate_windows(self) -> None:
-        for window in self._windows:
-            window: Window
-            if not window.exists():
-                self._log("One of your instances has closed!")
-                self._abandon_windows()
-                break
-
-    def _is_app_selected(self) -> bool:
-        try:
-            return self.focus_displayof() is not None
-        except:
-            return False
-
-    def _set_windows(self, windows: list) -> None:
-        self._total_var.set("Current Instances: "+str(len(windows)))
-        self._windows = windows
-
-    def _abandon_windows(self) -> None:
-        if len(self._windows) > 0:
-            self._log("Abandoning current instances...")
-            for window in self._windows:
-                window: Window
-                try:
-                    int(window.get_title())
-                    window.revert_title()
-                except:
-                    pass
-            self._set_windows([])
 
     def _run_macro(self) -> None:
         try:
@@ -331,6 +329,47 @@ class EasyMultiApp(tk.Tk):
         time.sleep(0.1)
         keyboard.press_and_release("esc")
 
+    def _hide_keypress(self) -> None:
+        if are_any_keys_pressed(get_invalid_modifiers(self._hide_hotkey)):
+            return
+        current_window = get_current_window()
+        if current_window in self._windows:
+            for window in self._windows:
+                if window != current_window:
+                    window.tiny()
+
+    # ----- general -----
+
+    def _is_app_selected(self) -> bool:
+        try:
+            return self.focus_displayof() is not None
+        except:
+            return False
+
+    def _set_windows(self, windows: list) -> None:
+        self._total_var.set("Current Instances: "+str(len(windows)))
+        self._windows = windows
+
+    def _validate_windows(self) -> None:
+        for window in self._windows:
+            window: Window
+            if not window.exists():
+                self._log("One of your instances has closed!")
+                self._abandon_windows()
+                break
+
+    def _abandon_windows(self) -> None:
+        if len(self._windows) > 0:
+            self._log("Abandoning current instances...")
+            for window in self._windows:
+                window: Window
+                try:
+                    int(window.get_title())
+                    window.revert_title()
+                except:
+                    pass
+            self._set_windows([])
+
     def _log(self, txt: str) -> None:
         for new_line in [i.rstrip() for i in txt.split("\n")]:
             last_line = self._log_lines[-1]
@@ -351,55 +390,29 @@ class EasyMultiApp(tk.Tk):
             log_txt += line
         self._log_var.set(log_txt)
 
-    def _setup_button(self) -> None:
-        self._log("Running setup...")
+    # ----- file management -----
+
+    @staticmethod
+    def _load_options_json() -> None:
         try:
-            self._abandon_windows()
-            windows = get_all_mc_windows()
-            if len(windows) <= 0:
-                self._log(
-                    "Found no Minecraft instances open.")
-            else:
-                self._set_windows(windows)
-                self._log("Found "+str(len(windows)) +
-                          " minecraft instances.")
-                i = 0
-                for window in windows:
-                    i += 1
-                    window.set_title(str(i))
+            if not os.path.isfile("options.json"):
+                return {}
+            with open("options.json", "r") as options_file:
+                options_json = json.load(options_file)
+                options_file.close()
+            return options_json
         except:
-            self._log("Error during setup: \n" +
-                      traceback.format_exc().replace("\n", "\\n"))
+            return {}
 
-    def log_button(self) -> None:
-        clipboard.copy(self._log_var.get().replace("\\n", "\n"))
+    @staticmethod
+    def _save_options_json(options_json: dict) -> None:
+        with open("options.json", "w+") as options_file:
+            json.dump(options_json, options_file, indent=4)
+            options_file.close()
 
-    def _try_borderless_button(self) -> None:
-        if len(self._windows) == 0:
-            self._log("No instances yet, please run setup.")
-        else:
-            self._log("Setting borderless...")
-            try:
-                for window in self._windows:
-                    window.go_borderless(self._window_size)
-            except:
-                self._log("Error going borderless:\n" +
-                          traceback.format_exc().replace("\n", "\\n"))
-
-    def _restore_button(self) -> None:
-        if len(self._windows) == 0:
-            self._log("No instances yet, please run setup.")
-        else:
-            self._log("Restoring windows...")
-            try:
-                i = 0
-                for window in self._windows:
-                    i += 1
-                    window.restore_window(i)
-                    window.activate()
-            except:
-                self._log("Error on restoring windows:\n" +
-                          traceback.format_exc().replace("\n", "\\n"))
+    @staticmethod
+    def _get_setting(options_json: dict, key: str) -> dict:
+        return options_json.get(key, DEFAULT_OPTIONS.get(key, None))
 
 
 def main():
