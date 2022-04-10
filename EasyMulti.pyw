@@ -3,12 +3,14 @@ import tkinter as tk
 from tkinter import ttk
 import os
 import json
+from turtle import color
 import keyboard
 import time
 import traceback
 import global_hotkeys
 import clipboard
 import threading
+import webbrowser
 
 from window import *
 from key_util import *
@@ -56,9 +58,9 @@ class IntEntry(tk.Entry):
 
 
 class EasyMultiApp(tk.Tk):
-    
+
     # ------ init -----
-    
+
     def __init__(self):
         super().__init__()
 
@@ -109,8 +111,19 @@ class EasyMultiApp(tk.Tk):
         global_hotkeys.start_checking_hotkeys()
 
     def _init_widgets(self) -> None:
+
+        title_frame = tk.Frame(self)
+        title_frame.grid(row=0, column=0, columnspan=5, padx=5, pady=5)
+
+        tk.Label(title_frame, text="Easy Multi v"+VERSION,
+                 font="arial 14").grid(row=0, column=0)
+        ll = tk.Label(title_frame, text="by Duncan",
+                 font="arial 10 underline", foreground="blue")
+        ll.grid(row=1, column=0)
+        ll.bind("<Button-1>",lambda x: webbrowser.open("https://linktr.ee/DuncanRuns"))
+
         buttons_frame = tk.LabelFrame(self)
-        buttons_frame.grid(row=0, column=0, padx=5, pady=5, sticky="nes")
+        buttons_frame.grid(row=1, column=0, padx=5, pady=5, sticky="nes")
         tk.Button(buttons_frame, text="Setup Instances", command=self._setup_button).grid(
             row=0, column=0, padx=5, pady=5, sticky="NESW")
         tk.Button(buttons_frame, text="Go Borderless", command=self._go_borderless_button).grid(
@@ -119,7 +132,7 @@ class EasyMultiApp(tk.Tk):
             row=2, column=0, padx=5, pady=5, sticky="NESW")
 
         options_frame = tk.LabelFrame(self)
-        options_frame.grid(row=1, column=0, padx=5, pady=5, sticky="nes")
+        options_frame.grid(row=2, column=0, padx=5, pady=5, sticky="nes")
         tk.Button(options_frame, textvariable=self._reset_dis_var, command=self._set_reset_button).grid(
             row=0, column=0, padx=5, pady=5, sticky="NESW")
         tk.Button(options_frame, textvariable=self._hide_dis_var, command=self._set_hide_button).grid(
@@ -128,7 +141,7 @@ class EasyMultiApp(tk.Tk):
             row=2, column=0, padx=5, pady=5, sticky="NESW")
 
         log_frame = tk.LabelFrame(self)
-        log_frame.grid(row=0, column=1, padx=5, pady=5, rowspan=2)
+        log_frame.grid(row=1, column=1, padx=5, pady=5, rowspan=2)
         tk.Label(log_frame, textvariable=self._log_var, anchor=tk.W,
                  justify=tk.LEFT, width=50).grid(row=0, column=0, padx=5, pady=5, columnspan=3)
         ttk.Separator(log_frame, orient=tk.HORIZONTAL).grid(
@@ -139,7 +152,7 @@ class EasyMultiApp(tk.Tk):
             row=2, column=2, padx=5, pady=5, sticky="e")
 
     # ----- exit -----
-    
+
     def _exit(self, *args) -> None:
         self._abandon_windows()
         self.destroy()
@@ -419,6 +432,7 @@ def main():
     try:
         ema = EasyMultiApp()
         ema.mainloop()
+        global_hotkeys.stop_checking_hotkeys()
     except:
         import tkinter.messagebox
         tkinter.messagebox.showerror(
