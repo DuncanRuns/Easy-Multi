@@ -16,7 +16,7 @@ from window import *
 from key_util import *
 from instance_util import *
 
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 
 
 def resource_path(relative_path):
@@ -502,17 +502,22 @@ class EasyMultiApp(tk.Tk):
         keyboard.press_and_release("esc")
 
     def _hide_keypress(self) -> None:
-        if are_any_keys_pressed(get_invalid_modifiers(self._hide_hotkey)):
-            return
-        current_window = get_current_window()
-        if len(self._windows) > 1 and current_window in self._windows:
-            successes = 0
-            for window in self._windows:
-                if window != current_window:
-                    if window.tiny():
-                        successes += 1
-            self._log("Hid "+str(successes+" instances.") if successes >
-                      0 else "No instances were hid (maybe they weren't borderless)")
+        try:
+            if are_any_keys_pressed(get_invalid_modifiers(self._hide_hotkey)):
+                return
+            current_window = get_current_window()
+            if len(self._windows) > 1 and current_window in self._windows:
+                successes = 0
+                for window in self._windows:
+                    if window != current_window:
+                        if window.tiny():
+                            successes += 1
+                self._log(("Hid "+str(successes)+" instances.") if successes >
+                          0 else "No instances were hid (maybe they weren't borderless)")
+        except:
+            self._log("Error during hiding: \n" +
+                      traceback.format_exc().replace("\n", "\\n"))
+            self._running = False
 
     # ----- general -----
 
