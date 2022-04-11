@@ -1,5 +1,5 @@
 # Easy Multi
-Extremely easy multi instancing software for minecraft speedrunning.
+Extremely easy multi/single instancing software for minecraft speedrunning.
 
 ![image](https://user-images.githubusercontent.com/59705125/162826907-a87b8da7-d391-4f2c-9e43-d582e2337e03.png)
 
