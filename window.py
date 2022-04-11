@@ -8,6 +8,9 @@ class Window:
         self._hwnd = hwnd
         self._original_title = hwnd_util.get_hwnd_title(self._hwnd)
 
+    def get_original_title(self) -> str:
+        return self._original_title
+
     def revert_title(self) -> None:
         self.set_title(self._original_title)
 

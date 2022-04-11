@@ -126,7 +126,6 @@ dmypy.json
 
 # Easy Multi
 options.json
-EasyMulti.ico
 toexe.bat
 .vscode
 test*

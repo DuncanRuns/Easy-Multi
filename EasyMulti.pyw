@@ -1,4 +1,3 @@
-from enum import auto
 from sys import maxsize
 import tkinter as tk
 from tkinter import ttk
@@ -17,7 +16,7 @@ from window import *
 from key_util import *
 from instance_util import *
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 
 def resource_path(relative_path):
@@ -101,7 +100,7 @@ class EasyMultiApp(tk.Tk):
             self._clear_types_dis_vars.append(tk.StringVar(self, value=""))
         self._auto_clear_dis_var = tk.StringVar = tk.StringVar(self, value="")
 
-        self._log("Welcome to Easy Multi!\n")
+        self._log("Welcome to Easy Multi!\n ")
         self._init_widgets()
         self._options_json = self._load_options_json()
         self._refresh_options()
@@ -444,6 +443,8 @@ class EasyMultiApp(tk.Tk):
                 self._validate_windows()
                 window_to_reset = get_current_window()
                 if window_to_reset in self._windows:
+                    window_to_reset = self._windows[self._windows.index(
+                        window_to_reset)]
                     if len(self._windows) == 1:
                         self._run_macro_single(window_to_reset)
                     else:
@@ -451,6 +452,8 @@ class EasyMultiApp(tk.Tk):
                     if self._auto_clear:
                         self._clear_worlds()
                 self._running = False
+                for window in self._windows:
+                    window.untiny(self._window_size)
         except:
             self._log("Error during reset: \n" +
                       traceback.format_exc().replace("\n", "\\n"))
@@ -458,8 +461,17 @@ class EasyMultiApp(tk.Tk):
 
     def _run_macro_single(self, window_to_reset: Window) -> None:
         self._log("Resetting (Single)...")
+        pre19 = False
+        try:
+            pre19 = int(window_to_reset.get_original_title().split(".")[1]) < 9
+        except:
+            pass
         keyboard.press_and_release("esc")
-        keyboard.press_and_release("shift+tab")
+        if pre19:
+            time.sleep(0.07)  # Uh oh magic number
+            keyboard.press_and_release("tab")
+        else:
+            keyboard.press_and_release("shift+tab")
         keyboard.press_and_release("enter")
         window_to_reset.untiny(self._window_size)
 
@@ -470,13 +482,21 @@ class EasyMultiApp(tk.Tk):
         next_window_index = 0 if next_window_index >= len(
             self._windows) else next_window_index
         next_window: Window = self._windows[next_window_index]
+        pre19 = False
+        try:
+            pre19 = int(window_to_reset.get_original_title().split(".")[1]) < 9
+        except:
+            pass
         keyboard.press_and_release("esc")
-        keyboard.press_and_release("shift+tab")
+        if pre19:
+            time.sleep(0.07)  # Uh oh magic number
+            keyboard.press_and_release("tab")
+        else:
+            keyboard.press_and_release("shift+tab")
         keyboard.press_and_release("enter")
         keyboard.press("alt+"+str(next_window_index+1))
         time.sleep(0.1)
         keyboard.release("alt+"+str(next_window_index+1))
-        next_window.untiny(self._window_size)
         next_window.activate()
         time.sleep(0.1)
         keyboard.press_and_release("esc")
@@ -555,9 +575,9 @@ class EasyMultiApp(tk.Tk):
                         str(int(
                             last_line[last_line.index(" (x")+3:-1]) + 1)+")"
                 else:
-                    while len(self._log_lines) >= 16:
+                    while len(self._log_lines) >= 15:
                         self._log_lines.pop(0)
-                    self._log_lines.append(new_line)
+                    self._log_lines.append(" " if new_line == "" else new_line)
             log_txt = ""
             for line in self._log_lines:
                 if log_txt != "":
