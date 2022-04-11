@@ -20,9 +20,11 @@ class Window:
     def activate(self) -> None:
         hwnd_util.activate_hwnd(self._hwnd)
 
-    def tiny(self) -> None:
+    def tiny(self) -> bool:
         if self.is_borderless():
             hwnd_util.move_hwnd(self._hwnd, 0, 0, 0, 0)
+            return True
+        return False
 
     def untiny(self, window_size) -> None:
         if self.is_borderless():

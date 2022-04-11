@@ -1,9 +1,10 @@
+from enum import auto
 from sys import maxsize
 import tkinter as tk
 from tkinter import ttk
+import tkinter.messagebox as tkMessageBox
 import os
 import json
-from turtle import color
 import keyboard
 import time
 import traceback
@@ -14,8 +15,9 @@ import webbrowser
 
 from window import *
 from key_util import *
+from instance_util import *
 
-VERSION = "1.0.4"
+VERSION = "1.1.0"
 
 
 def resource_path(relative_path):
@@ -30,8 +32,14 @@ def resource_path(relative_path):
 DEFAULT_OPTIONS = {
     "reset_hotkey": ["u"],
     "hide_hotkey": ["p"],
-    "window_size": [1920, 1080]
+    "window_size": [1920, 1080],
+    "instances_folder": None,
+    "clear_types": "tttt",
+    "auto_clear": False
 }
+
+CHECK = "✅"
+CROSS = "❎"
 
 
 class IntEntry(tk.Entry):
@@ -65,24 +73,35 @@ class EasyMultiApp(tk.Tk):
         super().__init__()
 
         # TK Window Stuff
+
         self.title("Easy Multi v"+VERSION)
         self.resizable(0, 0)
         self.iconbitmap(resource_path("EasyMulti.ico"))
         self.protocol("WM_DELETE_WINDOW", self._exit)
 
         # App Stuff
+
         self._windows = []
         self._log_lines = [" " for i in range(20)]
         self._log_var: tk.StringVar = tk.StringVar(
             self, value="")
+        self._log_lock = threading.Lock()
+        self._running = False
+        self._changing_something = False
+
         self._total_var: tk.StringVar = tk.StringVar(
             self, value="Current Instances: 0")
         self._reset_dis_var: tk.StringVar = tk.StringVar(self, value="")
         self._hide_dis_var: tk.StringVar = tk.StringVar(self, value="")
         self._window_size_dis_var: tk.StringVar = tk.StringVar(self, value="")
-        self._changing_something = False
+        self._instances_folder_dis_var: tk.StringVar = tk.StringVar(
+            self, value="")
+        self._clear_types_dis_vars = []
+        for i in range(4):
+            self._clear_types_dis_vars.append(tk.StringVar(self, value=""))
+        self._auto_clear_dis_var = tk.StringVar = tk.StringVar(self, value="")
+
         self._log("Welcome to Easy Multi!\n")
-        self._running = False
         self._init_widgets()
         self._options_json = self._load_options_json()
         self._refresh_options()
@@ -93,6 +112,20 @@ class EasyMultiApp(tk.Tk):
             self._options_json, "window_size")
         self._window_size_dis_var.set(
             "Window Size:\n"+str(self._window_size[0])+"x"+str(self._window_size[1]))
+
+        self._instances_folder = self._get_setting(
+            self._options_json, "instances_folder")
+        self._instances_folder_dis_var.set(
+            ".................... Currently Unset" if self._instances_folder is None else ".................... "+self._instances_folder)
+        self._clear_types: str = self._get_setting(
+            self._options_json, "clear_types")
+        self._auto_clear = self._get_setting(self._options_json, "auto_clear")
+
+        for i, b in enumerate(list(self._clear_types)):
+            self._clear_types_dis_vars[i].set(CHECK if b == "t" else CROSS)
+
+        self._auto_clear_dis_var.set(CHECK if self._auto_clear else CROSS)
+
         self._save_options_json(self._options_json)
 
     def _setup_hotkeys(self) -> None:
@@ -118,19 +151,27 @@ class EasyMultiApp(tk.Tk):
         tk.Label(title_frame, text="Easy Multi v"+VERSION,
                  font="arial 14").grid(row=0, column=0)
         ll = tk.Label(title_frame, text="by Duncan",
-                 font="arial 10 underline", foreground="blue")
+                      font="arial 10 underline", foreground="blue")
         ll.grid(row=1, column=0)
-        ll.bind("<Button-1>",lambda x: webbrowser.open("https://linktr.ee/DuncanRuns"))
+        ll.bind("<Button-1>",
+                lambda x: webbrowser.open("https://linktr.ee/DuncanRuns"))
 
-        buttons_frame = tk.LabelFrame(self)
-        buttons_frame.grid(row=1, column=0, padx=5, pady=5, sticky="nes")
-        tk.Button(buttons_frame, text="Setup Instances", command=self._setup_button).grid(
+        self._init_widgets_control()
+        self._init_widgets_options()
+        self._init_widgets_log()
+        self._init_widgets_worlds()
+
+    def _init_widgets_control(self) -> None:
+        control_frame = tk.LabelFrame(self)
+        control_frame.grid(row=1, column=0, padx=5, pady=5, sticky="nes")
+        tk.Button(control_frame, text="Setup Instances", command=self._setup_button).grid(
             row=0, column=0, padx=5, pady=5, sticky="NESW")
-        tk.Button(buttons_frame, text="Go Borderless", command=self._go_borderless_button).grid(
+        tk.Button(control_frame, text="Go Borderless", command=self._go_borderless_button).grid(
             row=1, column=0, padx=5, pady=5, sticky="NESW")
-        tk.Button(buttons_frame, text="Restore Windows", command=self._restore_button).grid(
+        tk.Button(control_frame, text="Restore Windows", command=self._restore_button).grid(
             row=2, column=0, padx=5, pady=5, sticky="NESW")
 
+    def _init_widgets_options(self) -> None:
         options_frame = tk.LabelFrame(self)
         options_frame.grid(row=2, column=0, padx=5, pady=5, sticky="nes")
         tk.Button(options_frame, textvariable=self._reset_dis_var, command=self._set_reset_button).grid(
@@ -140,6 +181,7 @@ class EasyMultiApp(tk.Tk):
         tk.Button(options_frame, textvariable=self._window_size_dis_var, command=self._set_window_size_button).grid(
             row=2, column=0, padx=5, pady=5, sticky="NESW")
 
+    def _init_widgets_log(self) -> None:
         log_frame = tk.LabelFrame(self)
         log_frame.grid(row=1, column=1, padx=5, pady=5, rowspan=2)
         tk.Label(log_frame, textvariable=self._log_var, anchor=tk.W,
@@ -151,6 +193,74 @@ class EasyMultiApp(tk.Tk):
         tk.Button(log_frame, text="Copy Log", command=self._copy_log_button).grid(
             row=2, column=2, padx=5, pady=5, sticky="e")
 
+    def _init_widgets_worlds(self) -> None:
+        worlds_frame = tk.LabelFrame(self)
+        worlds_frame.grid(row=1, column=2, padx=5,
+                          pady=5, rowspan=2, sticky="ns")
+
+        csw_frame = tk.Frame(worlds_frame)
+        csw_frame.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+
+        tk.Button(csw_frame, text="Clear Speedrun Worlds",
+                  command=self._clear_worlds_button).grid(row=0, column=0)
+        info_button = tk.Label(csw_frame, text="?", font="arial 9 underline",
+                               foreground="blue")
+        info_button.grid(row=0, column=1, padx=3)
+
+        def show_clear_explanation(*args):
+            tkMessageBox.showinfo(
+                "Easy Multi: World Clearing", "Clearing Speedrun Worlds will clear out all speedrun worlds from all MultiMC instances except for the latest 5 in each instance.\n\n\"Automatically Clear\" will do this every reset.\n\n\"World Types to Clear\" determine which worlds are considered speedrun worlds.")
+        info_button.bind("<Button-1>", show_clear_explanation)
+
+        auto_clear_frame = tk.Frame(worlds_frame)
+        auto_clear_frame.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        tk.Button(auto_clear_frame, textvariable=self._auto_clear_dis_var, command=self._auto_clear_button).grid(
+            row=0, column=0)
+        tk.Label(auto_clear_frame, text="Automatically Clear").grid(
+            row=0, column=1)
+
+        ttk.Separator(worlds_frame, orient=tk.HORIZONTAL).grid(
+            row=45, column=0, pady=5, sticky="we")
+
+        tk.Label(worlds_frame, text="MultiMC Instances Folder:").grid(
+            row=50, column=0, padx=5, pady=5, sticky="w")
+        path_frame = tk.Frame(worlds_frame)
+        path_frame.grid(row=51, column=0, padx=5, pady=0, sticky="w")
+        tk.Label(path_frame, textvariable=self._instances_folder_dis_var, anchor=tk.E, width=15,).grid(
+            row=1, column=1, padx=5, pady=0, sticky="w")
+        tk.Button(path_frame, text="📁", command=self._set_instances_path_button).grid(
+            row=1, column=0, pady=0, sticky="w")
+
+        ttk.Separator(worlds_frame, orient=tk.HORIZONTAL).grid(
+            row=95, column=0, pady=5, sticky="we")
+
+        tk.Label(worlds_frame, text="World Types to Clear:").grid(
+            row=99, column=0, padx=5, sticky="w")
+
+        clear_types_frame = tk.Frame(worlds_frame)
+        clear_types_frame.grid(row=100, column=0, padx=5, pady=5, sticky="w")
+        clear_type_frames = []
+        for i in range(4):
+            frame = tk.Frame(clear_types_frame)
+            frame.grid(row=i, column=0, sticky="w")
+            clear_type_frames.append(frame)
+        tk.Button(
+            clear_type_frames[0], textvariable=self._clear_types_dis_vars[0], command=lambda *x: self._clear_type_button(0)).grid(row=0, column=0, sticky="w")
+        tk.Button(
+            clear_type_frames[1], textvariable=self._clear_types_dis_vars[1], command=lambda *x: self._clear_type_button(1)).grid(row=0, column=0, sticky="w")
+        tk.Button(
+            clear_type_frames[2], textvariable=self._clear_types_dis_vars[2], command=lambda *x: self._clear_type_button(2)).grid(row=0, column=0, sticky="w")
+        tk.Button(
+            clear_type_frames[3], textvariable=self._clear_types_dis_vars[3], command=lambda *x: self._clear_type_button(3)).grid(row=0, column=0, sticky="w")
+        tk.Label(clear_type_frames[0], text="New World (22)").grid(
+            row=0, column=1)
+        tk.Label(clear_type_frames[1], text="RandomSpeedrun #22").grid(
+            row=0, column=1)
+        tk.Label(clear_type_frames[2], text="SetSpeedrun #22").grid(
+            row=0, column=1)
+        tk.Label(clear_type_frames[3], text="Speedrun #22").grid(
+            row=0, column=1)
+
     # ----- exit -----
 
     def _exit(self, *args) -> None:
@@ -158,6 +268,13 @@ class EasyMultiApp(tk.Tk):
         self.destroy()
 
     # ----- buttons -----
+
+    def _auto_clear_button(self, *args) -> None:
+        self._options_json["auto_clear"] = not self._auto_clear
+        self._refresh_options()
+
+    def _clear_worlds_button(self, *args) -> None:
+        self._clear_worlds()
 
     def _set_reset_button(self, *args) -> None:
         threading.Thread(target=self._set_reset_thread).start()
@@ -243,7 +360,7 @@ class EasyMultiApp(tk.Tk):
                     exit_wst()
             window_size_tl.after(50, tick)
 
-    def _setup_button(self) -> None:
+    def _setup_button(self, *args) -> None:
         self._log("Running setup...")
         try:
             self._abandon_windows()
@@ -263,10 +380,10 @@ class EasyMultiApp(tk.Tk):
             self._log("Error during setup: \n" +
                       traceback.format_exc().replace("\n", "\\n"))
 
-    def _copy_log_button(self) -> None:
+    def _copy_log_button(self, *args) -> None:
         clipboard.copy(self._log_var.get().replace("\\n", "\n"))
 
-    def _go_borderless_button(self) -> None:
+    def _go_borderless_button(self, *args) -> None:
         if len(self._windows) == 0:
             self._log("No instances yet, please run setup.")
         else:
@@ -278,7 +395,7 @@ class EasyMultiApp(tk.Tk):
                 self._log("Error going borderless:\n" +
                           traceback.format_exc().replace("\n", "\\n"))
 
-    def _restore_button(self) -> None:
+    def _restore_button(self, *args) -> None:
         if len(self._windows) == 0:
             self._log("No instances yet, please run setup.")
         else:
@@ -292,6 +409,26 @@ class EasyMultiApp(tk.Tk):
             except:
                 self._log("Error on restoring windows:\n" +
                           traceback.format_exc().replace("\n", "\\n"))
+
+    def _set_instances_path_button(self, *args) -> None:
+        ans = ask_for_directory(self._instances_folder)
+        if ans != "":
+            instances_folder = ensure_instances_path(ans)
+            if instances_folder is None:
+                tkMessageBox.showerror("Easy Multi: Not an instances folder.",
+                                       "The selected directory was not an instances folder\nor the folder doesn't contain any instances yet.\nAttempts to located a related instances folder also failed.")
+            else:
+                self._options_json["instances_folder"] = instances_folder
+                self._refresh_options()
+
+    def _clear_type_button(self, ind: int) -> None:
+        l = list(self._clear_types)
+        l[ind] = "t" if l[ind] == "f" else "f"
+        s = ""
+        for i in l:
+            s += i
+        self._options_json["clear_types"] = s
+        self._refresh_options()
 
     # ----- keypress -----
 
@@ -311,6 +448,8 @@ class EasyMultiApp(tk.Tk):
                         self._run_macro_single(window_to_reset)
                     else:
                         self._run_macro_multi(window_to_reset)
+                    if self._auto_clear:
+                        self._clear_worlds()
                 self._running = False
         except:
             self._log("Error during reset: \n" +
@@ -346,12 +485,33 @@ class EasyMultiApp(tk.Tk):
         if are_any_keys_pressed(get_invalid_modifiers(self._hide_hotkey)):
             return
         current_window = get_current_window()
-        if current_window in self._windows:
+        if len(self._windows) > 1 and current_window in self._windows:
+            successes = 0
             for window in self._windows:
                 if window != current_window:
-                    window.tiny()
+                    if window.tiny():
+                        successes += 1
+            self._log("Hid "+str(successes+" instances.") if successes >
+                      0 else "No instances were hid (maybe they weren't borderless)")
 
     # ----- general -----
+
+    def _clear_worlds(self) -> None:
+        if self._instances_folder is None:
+            self._log("No instances folder set!")
+        else:
+            threading.Thread(target=self._clear_worlds_thread).start()
+
+    def _clear_worlds_thread(self) -> None:
+        if self._clear_types.count("t") > 0:
+            regex_list = []
+            for ind, regex in enumerate([NEW_WORLD_RE, RSPEEDRUN_RE, SSPEEDRUN_RE, SPEEDRUN_RE]):
+                if self._clear_types[ind] == "t":
+                    regex_list.append(regex)
+            count = delete_all_worlds(self._instances_folder, regex_list, 5)
+            self._log("Cleared "+str(count)+" worlds.")
+        else:
+            self._log("No clear types set!")
 
     def _is_app_selected(self) -> bool:
         try:
@@ -384,28 +544,30 @@ class EasyMultiApp(tk.Tk):
             self._set_windows([])
 
     def _log(self, txt: str) -> None:
-        for new_line in [i.rstrip() for i in txt.split("\n")]:
-            last_line = self._log_lines[-1]
-            if new_line == last_line:
-                self._log_lines[-1] = new_line + " (x2)"
-            elif (" (x" in last_line and new_line == last_line[:last_line.index(" (x")]):
-                self._log_lines[-1] = new_line + \
-                    " (x" + \
-                    str(int(last_line[last_line.index(" (x")+3:-1]) + 1)+")"
-            else:
-                while len(self._log_lines) >= 15:
-                    self._log_lines.pop(0)
-                self._log_lines.append(new_line)
-        log_txt = ""
-        for line in self._log_lines:
-            if log_txt != "":
-                log_txt += "\n"
-            log_txt += line
-        self._log_var.set(log_txt)
+        with self._log_lock:
+            for new_line in [i.rstrip() for i in txt.split("\n")]:
+                last_line = self._log_lines[-1]
+                if new_line == last_line:
+                    self._log_lines[-1] = new_line + " (x2)"
+                elif (" (x" in last_line and new_line == last_line[:last_line.index(" (x")]):
+                    self._log_lines[-1] = new_line + \
+                        " (x" + \
+                        str(int(
+                            last_line[last_line.index(" (x")+3:-1]) + 1)+")"
+                else:
+                    while len(self._log_lines) >= 16:
+                        self._log_lines.pop(0)
+                    self._log_lines.append(new_line)
+            log_txt = ""
+            for line in self._log_lines:
+                if log_txt != "":
+                    log_txt += "\n"
+                log_txt += line
+            self._log_var.set(log_txt)
 
     # ----- file management -----
 
-    @staticmethod
+    @ staticmethod
     def _load_options_json() -> None:
         try:
             if not os.path.isfile("options.json"):
@@ -417,13 +579,13 @@ class EasyMultiApp(tk.Tk):
         except:
             return {}
 
-    @staticmethod
+    @ staticmethod
     def _save_options_json(options_json: dict) -> None:
         with open("options.json", "w+") as options_file:
             json.dump(options_json, options_file, indent=4)
             options_file.close()
 
-    @staticmethod
+    @ staticmethod
     def _get_setting(options_json: dict, key: str) -> dict:
         return options_json.get(key, DEFAULT_OPTIONS.get(key, None))
 
@@ -434,8 +596,7 @@ def main():
         ema.mainloop()
         global_hotkeys.stop_checking_hotkeys()
     except:
-        import tkinter.messagebox
-        tkinter.messagebox.showerror(
+        tkMessageBox.showerror(
             "Easy Multi Error", traceback.format_exc())
 
 
