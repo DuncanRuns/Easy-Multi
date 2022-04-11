@@ -3,6 +3,13 @@ Extremely easy multi instancing software for minecraft speedrunning.
 
 ![image](https://user-images.githubusercontent.com/59705125/162826907-a87b8da7-d391-4f2c-9e43-d582e2337e03.png)
 
+A couple of goals of this project:
+- Setup multi in minutes
+- No file editing to adjust settings
+- Easy
+
+I believe I have met all of these goals.
+
 
 ## Usage
 
@@ -40,3 +47,16 @@ Extremely easy multi instancing software for minecraft speedrunning.
 
 - Wall is not supported, and probably never will be.
 - F3+ESC will never be supported, nor will background resetting.
+
+
+
+## Acknowledgements
+
+Thanks to all the following individuals and teams for their projects which helped make this project possible:
+- Specner, Four, and many others who have worked on reset and multi macros over the past year.
+- [Mr-Technician's Borderless Minecraft](https://github.com/Mr-Technician/BorderlessMinecraft)
+- [btsdev's Global Hotkeys module](https://github.com/btsdev/global_hotkeys)
+- [boppreh's keyboard module](https://github.com/boppreh/keyboard)
+- [terryyin's clipboard module](https://github.com/terryyin/clipboard)
+- The incredible amount of contributors of [pywin32](https://github.com/mhammond/pywin32)
+- Those who worked on Python, and the default Python modules.
