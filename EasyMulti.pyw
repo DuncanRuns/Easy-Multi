@@ -16,7 +16,7 @@ from window import *
 from key_util import *
 from instance_util import *
 
-VERSION = "1.2.1"
+VERSION = "1.3.0"
 
 
 def resource_path(relative_path):
@@ -34,7 +34,9 @@ DEFAULT_OPTIONS = {
     "window_size": [1920, 1080],
     "instances_folder": None,
     "clear_types": "tttt",
-    "auto_clear": False
+    "auto_clear": False,
+    "use_numpad": False,
+    "use_alt": True
 }
 
 CHECK = "✅"
@@ -80,6 +82,7 @@ class EasyMultiApp(tk.Tk):
 
         # App Stuff
 
+        self._did_hide = False
         self._windows = []
         self._log_lines = [" " for i in range(20)]
         self._log_var: tk.StringVar = tk.StringVar(
@@ -87,6 +90,8 @@ class EasyMultiApp(tk.Tk):
         self._log_lock = threading.Lock()
         self._running = False
         self._changing_something = False
+
+        # String Vars
 
         self._total_var: tk.StringVar = tk.StringVar(
             self, value="Current Instances: 0")
@@ -98,7 +103,9 @@ class EasyMultiApp(tk.Tk):
         self._clear_types_dis_vars = []
         for i in range(4):
             self._clear_types_dis_vars.append(tk.StringVar(self, value=""))
-        self._auto_clear_dis_var = tk.StringVar = tk.StringVar(self, value="")
+        self._auto_clear_dis_var = tk.StringVar(self, value="")
+        self._use_numpad_dis_var = tk.StringVar(self, value="")
+        self._use_alt_dis_var = tk.StringVar(self, value="")
 
         self._log("Welcome to Easy Multi!\n ")
         self._init_widgets()
@@ -106,25 +113,41 @@ class EasyMultiApp(tk.Tk):
         self._refresh_options()
 
     def _refresh_options(self) -> None:
+        # Hotkeys
+
         self._setup_hotkeys()
+
+        # Window Size
         self._window_size = self._get_setting(
             self._options_json, "window_size")
         self._window_size_dis_var.set(
             "Window Size:\n"+str(self._window_size[0])+"x"+str(self._window_size[1]))
 
+        # Instances Folder
         self._instances_folder = self._get_setting(
             self._options_json, "instances_folder")
         self._instances_folder_dis_var.set(
             ".................... Currently Unset" if self._instances_folder is None else ".................... "+self._instances_folder)
+
+        # Clear Types
         self._clear_types: str = self._get_setting(
             self._options_json, "clear_types")
-        self._auto_clear = self._get_setting(self._options_json, "auto_clear")
-
         for i, b in enumerate(list(self._clear_types)):
             self._clear_types_dis_vars[i].set(CHECK if b == "t" else CROSS)
 
+        # Auto Clear
+        self._auto_clear = self._get_setting(self._options_json, "auto_clear")
         self._auto_clear_dis_var.set(CHECK if self._auto_clear else CROSS)
 
+        # Use numpad
+        self._use_numpad = self._get_setting(self._options_json, "use_numpad")
+        self._use_numpad_dis_var.set(CHECK if self._use_numpad else CROSS)
+
+        # Use Alt
+        self._use_alt = self._get_setting(self._options_json, "use_alt")
+        self._use_alt_dis_var.set(CHECK if self._use_alt else CROSS)
+
+        # Save
         self._save_options_json(self._options_json)
 
     def _setup_hotkeys(self) -> None:
@@ -179,10 +202,23 @@ class EasyMultiApp(tk.Tk):
             row=1, column=0, padx=5, pady=5, sticky="NESW")
         tk.Button(options_frame, textvariable=self._window_size_dis_var, command=self._set_window_size_button).grid(
             row=2, column=0, padx=5, pady=5, sticky="NESW")
+        ttk.Separator(options_frame, orient=tk.HORIZONTAL).grid(
+            row=3, column=0, sticky="we", pady=5)
+
+        ss_frame = tk.Frame(options_frame)
+        ss_frame.grid(row=4, column=0, padx=5, pady=5)
+        tk.Label(ss_frame, text="Scene Switching").grid(
+            row=0, column=0, columnspan=2)
+        tk.Button(ss_frame, textvariable=self._use_numpad_dis_var,
+                  command=self._use_numpad_button).grid(row=1, column=0)
+        tk.Label(ss_frame, text="Use Numpad").grid(row=1, column=1, sticky="w")
+        tk.Button(ss_frame, textvariable=self._use_alt_dis_var,
+                  command=self._use_alt_button).grid(row=2, column=0)
+        tk.Label(ss_frame, text="Use Alt").grid(row=2, column=1, sticky="w")
 
     def _init_widgets_log(self) -> None:
         log_frame = tk.LabelFrame(self)
-        log_frame.grid(row=1, column=1, padx=5, pady=5, rowspan=2)
+        log_frame.grid(row=1, column=1, padx=5, pady=5, rowspan=2, sticky="n")
         tk.Label(log_frame, textvariable=self._log_var, anchor=tk.W,
                  justify=tk.LEFT, width=50).grid(row=0, column=0, padx=5, pady=5, columnspan=3)
         ttk.Separator(log_frame, orient=tk.HORIZONTAL).grid(
@@ -195,7 +231,7 @@ class EasyMultiApp(tk.Tk):
     def _init_widgets_worlds(self) -> None:
         worlds_frame = tk.LabelFrame(self)
         worlds_frame.grid(row=1, column=2, padx=5,
-                          pady=5, rowspan=2, sticky="ns")
+                          pady=5, rowspan=2, sticky="n")
 
         csw_frame = tk.Frame(worlds_frame)
         csw_frame.grid(row=0, column=0, padx=5, pady=5, sticky="w")
@@ -267,6 +303,24 @@ class EasyMultiApp(tk.Tk):
         self.destroy()
 
     # ----- buttons -----
+
+    def _use_numpad_button(self, *args) -> None:
+        if self._use_numpad and (not self._use_alt):
+            ans = tkMessageBox.askyesno(
+                "Easy Multi: Are you sure?", "The hotkey used to switch scenes will be \"1\", \"2\", \"3\", etc.\nAre you sure this is what you want?")
+            if not ans:
+                return
+        self._options_json["use_numpad"] = not self._use_numpad
+        self._refresh_options()
+
+    def _use_alt_button(self, *args) -> None:
+        if self._use_alt and (not self._use_numpad):
+            ans = tkMessageBox.askyesno(
+                "Easy Multi: Are you sure?", "The hotkey used to switch scenes will be \"1\", \"2\", \"3\", etc.\nAre you sure this is what you want?")
+            if not ans:
+                return
+        self._options_json["use_alt"] = not self._use_alt
+        self._refresh_options()
 
     def _auto_clear_button(self, *args) -> None:
         self._options_json["auto_clear"] = not self._auto_clear
@@ -439,21 +493,23 @@ class EasyMultiApp(tk.Tk):
     def _run_macro(self) -> None:
         try:
             if not self._running:
-                self._running = True
                 self._validate_windows()
                 window_to_reset = get_current_window()
                 if window_to_reset in self._windows:
+                    self._running = True
                     window_to_reset = self._windows[self._windows.index(
                         window_to_reset)]
+                    if self._did_hide:
+                        for window in self._windows:
+                            window.untiny(self._window_size)
+                        self._did_hide = False
                     if len(self._windows) == 1:
                         self._run_macro_single(window_to_reset)
                     else:
                         self._run_macro_multi(window_to_reset)
+                    self._running = False
                     if self._auto_clear:
                         self._clear_worlds()
-                self._running = False
-                for window in self._windows:
-                    window.untiny(self._window_size)
         except:
             self._log("Error during reset: \n" +
                       traceback.format_exc().replace("\n", "\\n"))
@@ -461,27 +517,34 @@ class EasyMultiApp(tk.Tk):
 
     def _run_macro_single(self, window_to_reset: Window) -> None:
         self._log("Resetting (Single)...")
-        pre19 = False
-        try:
-            pre19 = int(window_to_reset.get_original_title().split(".")[1]) < 9
-        except:
-            pass
-        keyboard.press_and_release("esc")
-        if pre19:
-            time.sleep(0.07)  # Uh oh magic number
-            keyboard.press_and_release("tab")
-        else:
-            keyboard.press_and_release("shift+tab")
-        keyboard.press_and_release("enter")
-        window_to_reset.untiny(self._window_size)
+        self._reset_world(window_to_reset)
 
     def _run_macro_multi(self, window_to_reset: Window) -> None:
-        self._log("Resetting...")
         next_window_index = self._windows.index(
             window_to_reset) + 1
         next_window_index = 0 if next_window_index >= len(
             self._windows) else next_window_index
         next_window: Window = self._windows[next_window_index]
+        switch_key = str(next_window_index+1)
+        if self._use_numpad:
+            switch_key = "numpad_"+switch_key
+        if self._use_alt:
+            switch_key = "alt+"+switch_key
+        self._log("Resetting and pressing " +
+                  format_hotkey(switch_key.split("+"))+"...")
+        self._reset_world(window_to_reset)
+
+        # Adjust for keyboard module's version of numpad
+        switch_key = switch_key.replace("numpad_", "num ")
+        keyboard.press(switch_key)
+        time.sleep(0.1)
+        keyboard.release(switch_key)
+        next_window.activate()
+        time.sleep(0.1)
+
+        keyboard.press_and_release("esc")
+
+    def _reset_world(self, window_to_reset: Window):
         pre19 = False
         try:
             pre19 = int(window_to_reset.get_original_title().split(".")[1]) < 9
@@ -494,12 +557,6 @@ class EasyMultiApp(tk.Tk):
         else:
             keyboard.press_and_release("shift+tab")
         keyboard.press_and_release("enter")
-        keyboard.press("alt+"+str(next_window_index+1))
-        time.sleep(0.1)
-        keyboard.release("alt+"+str(next_window_index+1))
-        next_window.activate()
-        time.sleep(0.1)
-        keyboard.press_and_release("esc")
 
     def _hide_keypress(self) -> None:
         try:
@@ -512,8 +569,12 @@ class EasyMultiApp(tk.Tk):
                     if window != current_window:
                         if window.tiny():
                             successes += 1
-                self._log(("Hid "+str(successes)+" instances.") if successes >
-                          0 else "No instances were hid (maybe they weren't borderless)")
+                if successes > 0:
+                    self._did_hide = True
+                    self._log("Hid "+str(successes)+" instances.")
+                else:
+                    self._log(
+                        "No instances were hid (maybe they weren't borderless)")
         except:
             self._log("Error during hiding: \n" +
                       traceback.format_exc().replace("\n", "\\n"))
@@ -580,7 +641,7 @@ class EasyMultiApp(tk.Tk):
                         str(int(
                             last_line[last_line.index(" (x")+3:-1]) + 1)+")"
                 else:
-                    while len(self._log_lines) >= 15:
+                    while len(self._log_lines) >= 20:
                         self._log_lines.pop(0)
                     self._log_lines.append(" " if new_line == "" else new_line)
             log_txt = ""
