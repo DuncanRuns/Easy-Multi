@@ -7,14 +7,28 @@ import json
 import keyboard
 import time
 import traceback
-import global_hotkeys
 import clipboard
 import threading
 import webbrowser
+import platform
 
-from window import *
-from key_util import *
-from instance_util import *
+system_type = platform.system()
+
+if system_type == "":
+    print("System type cannot be determined!")
+    raise
+elif system_type == "Windows":
+    print("Running Easy Multi on Windows")
+    from win_window import *
+    from win_key_util import *
+    from win_instance_util import *
+elif system_type == "Linux":
+    print("Linux is not yet supported!")
+    raise
+else:
+    raise
+
+print("Easy Multi on "+platform.system())
 
 VERSION = "1.3.0"
 
@@ -151,19 +165,20 @@ class EasyMultiApp(tk.Tk):
         self._save_options_json(self._options_json)
 
     def _setup_hotkeys(self) -> None:
-        global_hotkeys.stop_checking_hotkeys()
-        global_hotkeys.clear_hotkeys()
+        clear_and_stop_hotkey_checker()
+
         self._reset_hotkey = self._get_setting(
             self._options_json, "reset_hotkey")
         self._hide_hotkey = self._get_setting(
             self._options_json, "hide_hotkey")
-        global_hotkeys.register_hotkeys([
-            [self._reset_hotkey, self._reset_keypress, None],
-            [self._hide_hotkey, self._hide_keypress, None]
-        ])
+
+        register_hotkey(self._reset_hotkey, self._reset_keypress)
+        register_hotkey(self._hide_hotkey, self._hide_keypress)
+
         self._reset_dis_var.set("Reset:\n"+format_hotkey(self._reset_hotkey))
         self._hide_dis_var.set("Hide:\n"+format_hotkey(self._hide_hotkey))
-        global_hotkeys.start_checking_hotkeys()
+
+        start_hotkey_checker()
 
     def _init_widgets(self) -> None:
 
@@ -334,7 +349,7 @@ class EasyMultiApp(tk.Tk):
 
     def _set_reset_thread(self) -> None:
         if not self._changing_something:
-            global_hotkeys.stop_checking_hotkeys()
+            clear_and_stop_hotkey_checker()
             self._log("Setting hotkey, press ESC to cancel.")
             self._changing_something = True
             self._reset_dis_var.set("Reset:\n...")
@@ -349,7 +364,7 @@ class EasyMultiApp(tk.Tk):
 
     def _set_hide_thread(self) -> None:
         if not self._changing_something:
-            global_hotkeys.stop_checking_hotkeys()
+            clear_and_stop_hotkey_checker()
             self._log("Setting hotkey, press ESC to cancel.")
             self._changing_something = True
             self._hide_dis_var.set("Hide:\n...")
@@ -678,7 +693,7 @@ def main():
     try:
         ema = EasyMultiApp()
         ema.mainloop()
-        global_hotkeys.stop_checking_hotkeys()
+        clear_and_stop_hotkey_checker()
     except:
         tkMessageBox.showerror(
             "Easy Multi Error", traceback.format_exc())

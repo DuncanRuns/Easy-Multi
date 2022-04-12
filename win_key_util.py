@@ -2,6 +2,7 @@
 
 import time
 from global_hotkeys.keycodes import vk_key_names
+import global_hotkeys
 from win32 import win32api
 import ctypes
 
@@ -95,6 +96,21 @@ def are_any_keys_pressed(key_names: list) -> bool:
         if is_pressed(key_name):
             return True
     return False
+
+
+def clear_and_stop_hotkey_checker() -> None:
+    global_hotkeys.stop_checking_hotkeys()
+    global_hotkeys.clear_hotkeys()
+
+
+def register_hotkey(hotkey: list, callback) -> None:
+    global_hotkeys.register_hotkeys([
+        [hotkey, callback, None]
+    ])
+
+
+def start_hotkey_checker() -> None:
+    global_hotkeys.start_checking_hotkeys()
 
 
 if __name__ == "__main__":
