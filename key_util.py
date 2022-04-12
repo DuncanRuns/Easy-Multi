@@ -3,6 +3,9 @@
 import time
 from global_hotkeys.keycodes import vk_key_names
 from win32 import win32api
+import ctypes
+
+_user32 = ctypes.WinDLL('user32', use_last_error=True)
 
 MODIFIER_KEYS = ["left_control", "right_control",
                  "left_shift", "right_shift", "left_menu", "right_menu"]
@@ -17,6 +20,19 @@ _MODIFIER_DICT = {
     "control": ALL_CONTROL_KEYS.copy(),
     "shift": ALL_SHIFT_KEYS.copy()
 }
+
+
+# Keyboard module apparently doesn't do so well with numpad stuff, so this is useful for that.
+def press_keys_for_time(gh_keys: list, wait_time: int = 0.1):
+    global _user32
+    # Press
+    for gh_key in gh_keys:
+        _user32.keybd_event(vk_key_names[gh_key], 0, 0, 0)
+    # Wait
+    time.sleep(wait_time)
+    # Release
+    for gh_key in gh_keys:
+        _user32.keybd_event(vk_key_names[gh_key], 0, 2, 0)
 
 
 def get_similar_modifiers(key_name: str):

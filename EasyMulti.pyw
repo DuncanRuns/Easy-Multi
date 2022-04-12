@@ -530,15 +530,13 @@ class EasyMultiApp(tk.Tk):
             switch_key = "numpad_"+switch_key
         if self._use_alt:
             switch_key = "alt+"+switch_key
+
         self._log("Resetting and pressing " +
                   format_hotkey(switch_key.split("+"))+"...")
+
         self._reset_world(window_to_reset)
 
-        # Adjust for keyboard module's version of numpad
-        switch_key = switch_key.replace("numpad_", "num ")
-        keyboard.press(switch_key)
-        time.sleep(0.1)
-        keyboard.release(switch_key)
+        press_keys_for_time(switch_key.split("+"), 0.1)
         next_window.activate()
         time.sleep(0.1)
 
