@@ -28,8 +28,6 @@ elif system_type == "Linux":
 else:
     raise
 
-print("Easy Multi on "+platform.system())
-
 VERSION = "1.3.0"
 
 
