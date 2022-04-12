@@ -30,6 +30,7 @@ I believe I have met all of these goals.
 ### Reset Options Panel
 - Pressing either "Reset: ___" and "Hide: ___" will let you set the hotkeys for the respective action.
 - Pressing "Window Size: ___x___" will pop up a window which lets you select the size of a borderless window when it is not in a hidden state.
+- The checkboxes in "Scene Switching" determine what key will be pressed when switching to an instance. For example, with both "Use Alt" and "Use Numpad" selected, Alt + Numpad 2 will be pressed when switching to instance 2. This option is to help obs know which instance Easy Multi switched to.
 
 ### Log Panel
 - The large box taking the majority of the panel shows the output of the app, including resets, world clearings, etc...
