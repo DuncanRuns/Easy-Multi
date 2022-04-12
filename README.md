@@ -1,7 +1,7 @@
 # Easy Multi
 Extremely easy multi/single instancing software for minecraft speedrunning.
 
-![image](https://user-images.githubusercontent.com/59705125/162826907-a87b8da7-d391-4f2c-9e43-d582e2337e03.png)
+![image](https://user-images.githubusercontent.com/59705125/162879621-b017162e-702d-4477-80d1-3c20dc32833b.png)
 
 A couple of goals of this project:
 - Setup multi in minutes
