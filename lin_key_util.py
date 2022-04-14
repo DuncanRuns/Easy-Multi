@@ -1,3 +1,5 @@
+# Abstraction layer on top of the keyboard module
+
 # NOTE(wurgo): THE PROGRAM MUST BE RUN WITH SUDO TO USE KEYBOARD LIBRARY!!!!!!!!!!!!!!!!!
 # NOTE(duncan): Please stop shouting
 

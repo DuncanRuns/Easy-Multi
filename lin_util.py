@@ -1,3 +1,5 @@
+# Abstraction layer on top of xdotool
+
 import subprocess, keyboard
 
 # NOTE(wurgo): No, I did not misspell win, WID stands for Window Identifier OMEGA
