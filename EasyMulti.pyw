@@ -78,7 +78,7 @@ class EasyMultiApp(tk.Tk):
 
         # TK Window Stuff
 
-        self.title("Easy Multi v"+VERSION)
+        self.title("Easy Multi v" + VERSION)
         self.resizable(0, 0)
         self.iconbitmap(resource_path("EasyMulti.ico"))
         self.protocol("WM_DELETE_WINDOW", self._exit)
@@ -124,13 +124,13 @@ class EasyMultiApp(tk.Tk):
         self._window_size = self._get_setting(
             self._options_json, "window_size")
         self._window_size_dis_var.set(
-            "Window Size:\n"+str(self._window_size[0])+"x"+str(self._window_size[1]))
+            "Window Size:\n" + str(self._window_size[0]) + "x" + str(self._window_size[1]))
 
         # Instances Folder
         self._instances_folder = self._get_setting(
             self._options_json, "instances_folder")
         self._instances_folder_dis_var.set(
-            ".................... Currently Unset" if self._instances_folder is None else ".................... "+self._instances_folder)
+            ".................... Currently Unset" if self._instances_folder is None else ".................... " + self._instances_folder)
 
         # Clear Types
         self._clear_types: str = self._get_setting(
@@ -164,8 +164,8 @@ class EasyMultiApp(tk.Tk):
         register_hotkey(self._reset_hotkey, self._reset_keypress)
         register_hotkey(self._hide_hotkey, self._hide_keypress)
 
-        self._reset_dis_var.set("Reset:\n"+format_hotkey(self._reset_hotkey))
-        self._hide_dis_var.set("Hide:\n"+format_hotkey(self._hide_hotkey))
+        self._reset_dis_var.set("Reset:\n" + format_hotkey(self._reset_hotkey))
+        self._hide_dis_var.set("Hide:\n" + format_hotkey(self._hide_hotkey))
 
         start_hotkey_checker()
 
@@ -174,7 +174,7 @@ class EasyMultiApp(tk.Tk):
         title_frame = tk.Frame(self)
         title_frame.grid(row=0, column=0, columnspan=5, padx=5, pady=5)
 
-        tk.Label(title_frame, text="Easy Multi v"+VERSION,
+        tk.Label(title_frame, text="Easy Multi v" + VERSION,
                  font="arial 14").grid(row=0, column=0)
         ll = tk.Label(title_frame, text="by Duncan",
                       font="arial 10 underline", foreground="blue")
@@ -427,7 +427,7 @@ class EasyMultiApp(tk.Tk):
                     "Found no Minecraft instances open.")
             else:
                 self._set_windows(windows)
-                self._log("Found "+str(len(windows)) +
+                self._log("Found " + str(len(windows)) +
                           " minecraft instances.")
                 i = 0
                 for window in windows:
@@ -529,14 +529,14 @@ class EasyMultiApp(tk.Tk):
         next_window_index = 0 if next_window_index >= len(
             self._windows) else next_window_index
         next_window: Window = self._windows[next_window_index]
-        switch_key = str(next_window_index+1)
+        switch_key = str(next_window_index + 1)
         if self._use_numpad:
-            switch_key = "numpad_"+switch_key
+            switch_key = "numpad_" + switch_key
         if self._use_alt:
-            switch_key = "alt+"+switch_key
+            switch_key = "alt+" + switch_key
 
         self._log("Resetting and pressing " +
-                  format_hotkey(switch_key.split("+"))+"...")
+                  format_hotkey(switch_key.split("+")) + "...")
 
         self._reset_world(window_to_reset)
 
@@ -573,7 +573,7 @@ class EasyMultiApp(tk.Tk):
                             successes += 1
                 if successes > 0:
                     self._did_hide = True
-                    self._log("Hid "+str(successes)+" instances.")
+                    self._log("Hid " + str(successes) + " instances.")
                 else:
                     self._log(
                         "No instances were hid (maybe they weren't borderless)")
@@ -597,7 +597,7 @@ class EasyMultiApp(tk.Tk):
                 if self._clear_types[ind] == "t":
                     regex_list.append(regex)
             count = delete_all_worlds(self._instances_folder, regex_list, 5)
-            self._log("Cleared "+str(count)+" worlds.")
+            self._log("Cleared " + str(count) + " worlds.")
         else:
             self._log("No clear types set!")
 
@@ -608,7 +608,7 @@ class EasyMultiApp(tk.Tk):
             return False
 
     def _set_windows(self, windows: list) -> None:
-        self._total_var.set("Current Instances: "+str(len(windows)))
+        self._total_var.set("Current Instances: " + str(len(windows)))
         self._windows = windows
 
     def _validate_windows(self) -> None:
@@ -641,7 +641,7 @@ class EasyMultiApp(tk.Tk):
                     self._log_lines[-1] = new_line + \
                         " (x" + \
                         str(int(
-                            last_line[last_line.index(" (x")+3:-1]) + 1)+")"
+                            last_line[last_line.index(" (x") + 3:-1]) + 1) + ")"
                 else:
                     while len(self._log_lines) >= 20:
                         self._log_lines.pop(0)
