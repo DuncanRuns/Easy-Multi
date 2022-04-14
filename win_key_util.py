@@ -1,6 +1,7 @@
 # Abstraction layer on top of win32api and uses some stuff from global_hotkeys
 
 import time, global_hotkeys, ctypes
+from typing import Callable
 from global_hotkeys.keycodes import vk_key_names
 from win32 import win32api
 
@@ -53,9 +54,9 @@ def is_pressed(ghk_name: str):
     return win32api.GetAsyncKeyState(vk_key_names[ghk_name]) < 0
 
 
-def read_hotkey(should_continue_call=None) -> list:
+def read_hotkey(should_continue_callback: Callable = None) -> list:
     found_key = ""
-    while found_key == "" and (should_continue_call is None or should_continue_call()):
+    while found_key == "" and (should_continue_callback is None or should_continue_callback()):
         time.sleep(0.01)
         for ghk_name in NM_KEYS:
             if is_pressed(ghk_name):

@@ -90,7 +90,7 @@ def is_hwnd_borderless(hwnd: int) -> bool:
 def undo_hwnd_borderless(hwnd, offset=0) -> None:
     restore_hwnd(hwnd)
     set_hwnd_style(hwnd, 382664704)
-    move_hwnd(hwnd, 60*offset, 60*offset, 900, 520)
+    move_hwnd(hwnd, 60 * offset, 60 * offset, 900, 520)
 
 
 def set_hwnd_title(hwnd: int, text: str) -> None:
