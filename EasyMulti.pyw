@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import messagebox as tkMessageBox, ttk
 from instance_util import *
 from sys import maxsize
+from idlelib.tooltip import Hovertip
 
 system_type = platform.system()
 
@@ -192,10 +193,16 @@ class EasyMultiApp(tk.Tk):
         control_frame.grid(row=1, column=0, padx=5, pady=5, sticky="nes")
         tk.Button(control_frame, text="Setup Instances", command=self._setup_button).grid(
             row=0, column=0, padx=5, pady=5, sticky="NESW")
-        tk.Button(control_frame, text="Go Borderless", command=self._go_borderless_button).grid(
-            row=1, column=0, padx=5, pady=5, sticky="NESW")
+        borderless_button = tk.Button(
+            control_frame, text="Go Borderless", command=self._go_borderless_button)
+        borderless_button.grid(row=1, column=0, padx=5, pady=5, sticky="NESW")
         tk.Button(control_frame, text="Restore Windows", command=self._restore_button).grid(
             row=2, column=0, padx=5, pady=5, sticky="NESW")
+
+        if not SUPPORTS_BORDERLESS:
+            borderless_button["state"] = "disabled"
+            hover_tip = Hovertip(borderless_button,
+                                 "Borderless is not supported on your platform")
 
     def _init_widgets_options(self) -> None:
         options_frame = tk.LabelFrame(self)
