@@ -163,7 +163,8 @@ class EasyMultiApp(tk.Tk):
             self._options_json, "hide_hotkey")
 
         register_hotkey(self._reset_hotkey, self._reset_keypress)
-        register_hotkey(self._hide_hotkey, self._hide_keypress)
+        if SUPPORTS_BORDERLESS:
+            register_hotkey(self._hide_hotkey, self._hide_keypress)
 
         self._reset_dis_var.set("Reset:\n" + format_hotkey(self._reset_hotkey))
         self._hide_dis_var.set("Hide:\n" + format_hotkey(self._hide_hotkey))
@@ -209,12 +210,23 @@ class EasyMultiApp(tk.Tk):
         options_frame.grid(row=2, column=0, padx=5, pady=5, sticky="nes")
         tk.Button(options_frame, textvariable=self._reset_dis_var, command=self._set_reset_button).grid(
             row=0, column=0, padx=5, pady=5, sticky="NESW")
-        tk.Button(options_frame, textvariable=self._hide_dis_var, command=self._set_hide_button).grid(
+        set_hide_button_button = tk.Button(
+            options_frame, textvariable=self._hide_dis_var, command=self._set_hide_button)
+        set_hide_button_button.grid(
             row=1, column=0, padx=5, pady=5, sticky="NESW")
-        tk.Button(options_frame, textvariable=self._window_size_dis_var, command=self._set_window_size_button).grid(
-            row=2, column=0, padx=5, pady=5, sticky="NESW")
+        window_size_button = tk.Button(
+            options_frame, textvariable=self._window_size_dis_var, command=self._set_window_size_button)
+        window_size_button.grid(row=2, column=0, padx=5, pady=5, sticky="NESW")
         ttk.Separator(options_frame, orient=tk.HORIZONTAL).grid(
             row=3, column=0, sticky="we", pady=5)
+
+        if not SUPPORTS_BORDERLESS:
+            set_hide_button_button["state"] = "disabled"
+            hover_tip = Hovertip(set_hide_button_button,
+                                 "Borderless is not supported on your platform")
+            window_size_button["state"] = "disabled"
+            hover_tip = Hovertip(window_size_button,
+                                 "Borderless is not supported on your platform")
 
         ss_frame = tk.Frame(options_frame)
         ss_frame.grid(row=4, column=0, padx=5, pady=5)
