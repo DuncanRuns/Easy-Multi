@@ -21,6 +21,7 @@ elif system_type == "Linux":
     from lin_key_util import *
     from lin_constants import *
 else:
+    print("Unsupported system type!")
     raise
 
 VERSION = "1.3.1"
