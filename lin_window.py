@@ -3,8 +3,6 @@
 
 import lin_util
 
-SUPPORTS_BORDERLESS = False
-
 
 class Window:
     def __init__(self, wid):

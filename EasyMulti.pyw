@@ -14,9 +14,12 @@ elif system_type == "Windows":
     print("Running Easy Multi on Windows")
     from win_window import *
     from win_key_util import *
+    from win_constants import *
 elif system_type == "Linux":
-    print("Linux is not yet supported!")
-    raise
+    print("Running Easy Multi on Linux")
+    from lin_window import *
+    from lin_key_util import *
+    from lin_constants import *
 else:
     raise
 
@@ -30,21 +33,6 @@ def resource_path(relative_path):
     except Exception:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
-
-
-DEFAULT_OPTIONS = {
-    "reset_hotkey": ["u"],
-    "hide_hotkey": ["p"],
-    "window_size": [1920, 1080],
-    "instances_folder": None,
-    "clear_types": "tttt",
-    "auto_clear": False,
-    "use_numpad": False,
-    "use_alt": True
-}
-
-CHECK = "✅"
-CROSS = "❎"
 
 
 class IntEntry(tk.Entry):
@@ -81,7 +69,8 @@ class EasyMultiApp(tk.Tk):
 
         self.title("Easy Multi v" + VERSION)
         self.resizable(0, 0)
-        self.iconbitmap(resource_path("EasyMulti.ico"))
+        if USE_ICON:
+            self.iconbitmap(resource_path("EasyMulti.ico"))
         self.protocol("WM_DELETE_WINDOW", self._exit)
 
         # App Stuff
@@ -286,7 +275,7 @@ class EasyMultiApp(tk.Tk):
         path_frame.grid(row=51, column=0, padx=5, pady=0, sticky="w")
         tk.Label(path_frame, textvariable=self._instances_folder_dis_var, anchor=tk.E, width=15,).grid(
             row=1, column=1, padx=5, pady=0, sticky="w")
-        tk.Button(path_frame, text="📁", command=self._set_instances_path_button).grid(
+        tk.Button(path_frame, text=FOLDER, command=self._set_instances_path_button).grid(
             row=1, column=0, pady=0, sticky="w")
 
         ttk.Separator(worlds_frame, orient=tk.HORIZONTAL).grid(
@@ -388,7 +377,8 @@ class EasyMultiApp(tk.Tk):
             window_size_tl = tk.Toplevel(self)
             window_size_tl.resizable(0, 0)
             window_size_tl.title("Change Instance Window Size")
-            window_size_tl.iconbitmap(resource_path("EasyMulti.ico"))
+            if USE_ICON:
+                window_size_tl.iconbitmap(resource_path("EasyMulti.ico"))
 
             def exit_wst():
                 self._changing_something = False
@@ -703,8 +693,10 @@ def main():
         ema.mainloop()
         clear_and_stop_hotkey_checker()
     except:
+        error = traceback.format_exc()
+        print(error)
         tkMessageBox.showerror(
-            "Easy Multi Error", traceback.format_exc())
+            "Easy Multi Error", error)
 
 
 if __name__ == "__main__":

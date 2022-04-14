@@ -2,8 +2,6 @@
 
 import win_util
 
-SUPPORTS_BORDERLESS = True
-
 
 class Window:
     def __init__(self, hwnd):

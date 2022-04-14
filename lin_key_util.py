@@ -98,11 +98,19 @@ def are_any_keys_pressed(keys: list):
 
 
 def clear_and_stop_hotkey_checker() -> None:
-    keyboard.clear_all_hotkeys()
+    try:
+        keyboard.clear_all_hotkeys()
+    except:
+        pass
 
 
-def register_hotkey(hotkey: str, callback: Callable):
-    keyboard.add_hotkey(hotkey, callback)
+def register_hotkey(hotkey: list, callback: Callable):
+    key_string = ""
+    for key in hotkey:
+        if key_string != "":
+            key_string += "+"
+        key_string += key
+    keyboard.add_hotkey(key_string, callback)
 
 
 def start_hotkey_checker():
