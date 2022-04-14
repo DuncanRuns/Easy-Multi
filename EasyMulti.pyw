@@ -1,16 +1,8 @@
-from sys import maxsize
+import os, json, keyboard, time, traceback, clipboard, threading, webbrowser, platform
 import tkinter as tk
-from tkinter import ttk
-import tkinter.messagebox as tkMessageBox
-import os
-import json
-import keyboard
-import time
-import traceback
-import clipboard
-import threading
-import webbrowser
-import platform
+from tkinter import messagebox as tkMessageBox, ttk
+from instance_util import *
+from sys import maxsize
 
 system_type = platform.system()
 
@@ -21,7 +13,6 @@ elif system_type == "Windows":
     print("Running Easy Multi on Windows")
     from win_window import *
     from win_key_util import *
-    from win_instance_util import *
 elif system_type == "Linux":
     print("Linux is not yet supported!")
     raise

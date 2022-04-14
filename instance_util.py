@@ -1,10 +1,8 @@
 # Abstraction layer on top of os, os.path, and shutil to manage deleting worlds in multimc instances.
 
-import os
-import re
-import shutil
+import os, re, shutil
+from tkinter import filedialog as tkFileDialog
 from typing import Union
-import tkinter.filedialog as tkFileDialog
 
 
 NEW_WORLD_RE = "^New World( \\(\\d+\\))?$"

@@ -1,10 +1,9 @@
 # Abstraction layer on top of win32gui
 
+import re, win32con
 from win32 import win32gui
-import re
-import win32con
+from win32com import client
 
-import win32com.client
 shell = win32com.client.Dispatch("WScript.Shell")
 
 # Constants and borderless method thanks to Mr-Technician

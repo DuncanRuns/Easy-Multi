@@ -1,10 +1,8 @@
 # Abstraction layer on top of win32api and uses some stuff from global_hotkeys
 
-import time
+import time, global_hotkeys, ctypes
 from global_hotkeys.keycodes import vk_key_names
-import global_hotkeys
 from win32 import win32api
-import ctypes
 
 _user32 = ctypes.WinDLL('user32', use_last_error=True)
 
