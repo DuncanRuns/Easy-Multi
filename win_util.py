@@ -4,7 +4,7 @@ import re, win32con
 from win32 import win32gui
 from win32com import client
 
-shell = win32com.client.Dispatch("WScript.Shell")
+shell = client.Dispatch("WScript.Shell")
 
 # Constants and borderless method thanks to Mr-Technician
 # https://github.com/Mr-Technician/BorderlessMinecraft/blob/master/BorderlessMinecraft/DLLInterop.cs
