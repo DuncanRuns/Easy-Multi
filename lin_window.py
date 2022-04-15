@@ -38,6 +38,9 @@ class Window:
     def get_wid(self):
         return self._wid
 
+    def exists(self):
+        return lin_util.win_exists(self._wid)
+
     # get_hwnd missing, however the function is only used in the platform specific context anyway, so this is fine.
 
     def __eq__(self, __o: object):

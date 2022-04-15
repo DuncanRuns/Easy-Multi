@@ -15,7 +15,12 @@ def run_cmd(cmd: str):
 
 
 def get_pid(wid: str):
-    return run_cmd("xdotool getwindowpid {}".format(wid))
+    response = run_cmd("xdotool getwindowpid {}".format(wid))
+    try:
+        int(response)
+        return response
+    except:
+        return None
 
 
 def get_current_wid():
@@ -28,7 +33,8 @@ def get_win_title(wid: str):
 
 def get_all_mc_wids():
     try:
-        return run_cmd("xdotool search --class minecraft").split("\n")
+        response = run_cmd("xdotool search --class minecraft").split("\n")
+        return [] if response == [""] else response
     except Exception:
         return []
 
@@ -50,3 +56,7 @@ def suspend_win(wid: str):
 def resume_win(wid: str):
     pid = get_pid(wid)
     return run_cmd("kill -SIGCONT " + pid)
+
+
+def win_exists(wid: str):
+    return get_pid(wid) is not None

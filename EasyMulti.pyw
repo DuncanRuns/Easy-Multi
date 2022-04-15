@@ -454,7 +454,12 @@ class EasyMultiApp(tk.Tk):
                       error.replace("\n", "\\n"))
 
     def _copy_log_button(self, *args) -> None:
-        clipboard.copy(self._log_var.get().replace("\\n", "\n"))
+        try:
+            clipboard.copy(self._log_var.get().replace("\\n", "\n"))
+        except:
+            # Don't print the traceback because they can't copy the log anyway.
+            traceback.print_exc()
+            self._log("Log copy failed (probably unsupported platform).")
 
     def _go_borderless_button(self, *args) -> None:
         if len(self._windows) == 0:

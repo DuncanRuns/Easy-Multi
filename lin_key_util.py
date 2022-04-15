@@ -59,7 +59,10 @@ class KeyReader:
         if not should_continue:
             self._canceled = True
 
-        return self._result
+        if self._result is None:
+            return None
+        else:
+            return self._result.split("+")
 
     def _read_thread(self) -> None:
         result = keyboard.read_hotkey(suppress=False)
