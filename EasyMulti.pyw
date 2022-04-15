@@ -187,12 +187,16 @@ class EasyMultiApp(tk.Tk):
         borderless_button = tk.Button(
             control_frame, text="Go Borderless", command=self._go_borderless_button)
         borderless_button.grid(row=1, column=0, padx=5, pady=5, sticky="NESW")
-        tk.Button(control_frame, text="Restore Windows", command=self._restore_button).grid(
-            row=2, column=0, padx=5, pady=5, sticky="NESW")
+        restore_button = tk.Button(
+            control_frame, text="Restore Windows", command=self._restore_button)
+        restore_button.grid(row=2, column=0, padx=5, pady=5, sticky="NESW")
 
         if not SUPPORTS_BORDERLESS:
             borderless_button["state"] = "disabled"
             hover_tip = Hovertip(borderless_button,
+                                 "Borderless is not supported on your platform")
+            restore_button["state"] = "disabled"
+            hover_tip = Hovertip(restore_button,
                                  "Borderless is not supported on your platform")
 
     def _init_widgets_options(self) -> None:

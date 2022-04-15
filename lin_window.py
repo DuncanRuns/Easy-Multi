@@ -25,7 +25,7 @@ class Window:
         self.resume()
         lin_util.activate_win(self._wid)
 
-    # Missing tiny and untiny as linux does not support it.
+    # Missing tiny untiny, restore, and borderless related functions as linux does not support it.
     # Those functions should never be called as the east multi picks up the SUPPORTS_BORDERLESS constant
 
     # suspend and resume functions for instance freezing in a future version
