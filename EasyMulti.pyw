@@ -444,8 +444,10 @@ class EasyMultiApp(tk.Tk):
                     i += 1
                     window.set_title(str(i))
         except:
-            self._log("Error during setup: \n" +
-                      traceback.format_exc().replace("\n", "\\n"))
+            error = traceback.format_exc()
+            print(error)
+            self._log("Error during setup:\n" +
+                      error.replace("\n", "\\n"))
 
     def _copy_log_button(self, *args) -> None:
         clipboard.copy(self._log_var.get().replace("\\n", "\n"))
@@ -459,8 +461,10 @@ class EasyMultiApp(tk.Tk):
                 for window in self._windows:
                     window.go_borderless(self._window_size)
             except:
+                error = traceback.format_exc()
+                print(error)
                 self._log("Error going borderless:\n" +
-                          traceback.format_exc().replace("\n", "\\n"))
+                          error.replace("\n", "\\n"))
 
     def _restore_button(self, *args) -> None:
         if len(self._windows) == 0:
@@ -474,8 +478,10 @@ class EasyMultiApp(tk.Tk):
                     window.restore_window(i)
                     window.activate()
             except:
-                self._log("Error on restoring windows:\n" +
-                          traceback.format_exc().replace("\n", "\\n"))
+                error = traceback.format_exc()
+                print(error)
+                self._log("Error on restoring window:\n" +
+                          error.replace("\n", "\\n"))
 
     def _set_instances_path_button(self, *args) -> None:
         ans = ask_for_directory(self._instances_folder)
@@ -525,8 +531,10 @@ class EasyMultiApp(tk.Tk):
                     if self._auto_clear:
                         self._clear_worlds()
         except:
-            self._log("Error during reset: \n" +
-                      traceback.format_exc().replace("\n", "\\n"))
+            error = traceback.format_exc()
+            print(error)
+            self._log("Error during reset:\n" +
+                      error.replace("\n", "\\n"))
             self._running = False
 
     def _run_macro_single(self, window_to_reset: Window) -> None:
@@ -588,8 +596,10 @@ class EasyMultiApp(tk.Tk):
                     self._log(
                         "No instances were hid (maybe they weren't borderless)")
         except:
-            self._log("Error during hiding: \n" +
-                      traceback.format_exc().replace("\n", "\\n"))
+            error = traceback.format_exc()
+            print(error)
+            self._log("Error during hiding:\n" +
+                      error.replace("\n", "\\n"))
             self._running = False
 
     # ----- general -----
