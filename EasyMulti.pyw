@@ -1,3 +1,4 @@
+from io import TextIOWrapper
 import os, json, keyboard, time, traceback, clipboard, threading, webbrowser, platform
 import tkinter as tk
 from tkinter import messagebox as tkMessageBox, ttk
@@ -312,6 +313,60 @@ class EasyMultiApp(tk.Tk):
             row=0, column=1)
         tk.Label(clear_type_frames[3], text="Speedrun #22").grid(
             row=0, column=1)
+        
+        ttk.Separator(worlds_frame, orient=tk.HORIZONTAL).grid(
+            row=106, column=0, pady=5, sticky="we"
+        )
+
+        tk.Label(worlds_frame, text="Attempts:").grid(
+            row=110, column=0, padx=5, sticky="w"
+        )
+
+        attempts_frame = tk.Frame(worlds_frame)
+        attempts_frame.grid(row=111, column=0, padx=5, pady=5, sticky="w")
+
+        self.attempts = tk.Text(attempts_frame, width=int(worlds_frame.size()[1] / 5), height=1)
+        self.attempts.grid(row=0, column=0, sticky="w")
+
+        def save_cmd(*x):
+            self._save_attempts(self.attempts.get("1.0", tk.END))
+            self.focus() # NOTE(wurgo): removes the focus because THIS SHIT IS UNFOCUSABLE??????
+
+        tk.Button(attempts_frame, textvariable=tk.StringVar(self, "Save"), command=save_cmd).grid(row=0, column=9, sticky="w")
+        self._update_attempts_text()
+    
+    # NOTE(wurgo): long name: _create_attempts_file_if_not_exists KekMan
+    def _create_attempts_ine(self):
+        if not os.path.exists("./attempts.txt"):
+            with open("./attempts.txt", "w") as f:
+                pass
+    
+    def _update_attempts_text(self):
+        self.attempts.replace("1.0", tk.END, self._get_attempts())
+    
+    def _get_attempts(self):
+        self._create_attempts_ine()
+        with open("./attempts.txt", "r") as f:
+            try:
+                content = f.read()
+                if content == "": content = 0
+                else: content = int(content)
+            except Exception:
+                content = 0
+
+            return str(content)
+
+    def _save_attempts(self, amt: Union[str, int]):
+        if type(amt) == int: amt = str(amt)
+
+        with open("./attempts.txt", "w") as f:
+            f.write(amt)
+        
+        self._update_attempts_text()
+    
+    def _get_next_attempt(self):
+        return int(self._get_attempts()) + 1
+
 
     # ----- exit -----
 
@@ -586,6 +641,8 @@ class EasyMultiApp(tk.Tk):
         else:
             keyboard.press_and_release("shift+tab")
         keyboard.press_and_release("enter")
+
+        self._save_attempts(self._get_next_attempt())
 
     def _hide_keypress(self) -> None:
         try:
