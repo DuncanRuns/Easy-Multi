@@ -261,7 +261,7 @@ class EasyMultiApp(tk.Tk):
 
         def show_clear_explanation(*args):
             tkMessageBox.showinfo(
-                "Easy Multi: World Clearing", "Clearing Speedrun Worlds will clear out all speedrun worlds from all MultiMC instances except for the latest 5 in each instance.\n\n\"Automatically Clear\" will do this every reset.\n\n\"World Types to Clear\" determine which worlds are considered speedrun worlds.")
+                "Easy Multi: World Clearing", "Clearing Speedrun Worlds will clear out all speedrun worlds from all MultiMC instances except for the latest 6 in each instance.\n\n\"Automatically Clear\" will do this every reset.\n\n\"World Types to Clear\" determine which worlds are considered speedrun worlds.")
         info_button.bind("<Button-1>", show_clear_explanation)
 
         auto_clear_frame = tk.Frame(worlds_frame)
@@ -625,7 +625,7 @@ class EasyMultiApp(tk.Tk):
             for ind, regex in enumerate([NEW_WORLD_RE, RSPEEDRUN_RE, SSPEEDRUN_RE, SPEEDRUN_RE]):
                 if self._clear_types[ind] == "t":
                     regex_list.append(regex)
-            count = delete_all_worlds(self._instances_folder, regex_list, 5)
+            count = delete_all_worlds(self._instances_folder, regex_list, 6)
             self._log("Cleared " + str(count) + " worlds.")
         else:
             self._log("No clear types set!")
