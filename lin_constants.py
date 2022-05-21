@@ -6,7 +6,9 @@ DEFAULT_OPTIONS = {
     "clear_types": "tttt",
     "auto_clear": False,
     "use_numpad": False,
-    "use_alt": True
+    "use_alt": True,
+    "auto_hide": False,
+    "hide_time": 5
 }
 
 CHECK = "✅"

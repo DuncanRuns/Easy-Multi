@@ -24,7 +24,7 @@ else:
     print("Unsupported system type!")
     raise
 
-VERSION = "1.3.1"
+VERSION = "1.4.0"
 
 
 def resource_path(relative_path):
@@ -84,6 +84,8 @@ class EasyMultiApp(tk.Tk):
         self._log_lock = threading.Lock()
         self._running = False
         self._changing_something = False
+        # An action is a hide, reset or any control panel button
+        self._last_action_time = time.time()
 
         # String Vars
 
@@ -100,11 +102,31 @@ class EasyMultiApp(tk.Tk):
         self._auto_clear_dis_var = tk.StringVar(self, value="")
         self._use_numpad_dis_var = tk.StringVar(self, value="")
         self._use_alt_dis_var = tk.StringVar(self, value="")
+        self._auto_hide_dis_var = tk.StringVar(self, value="")
+        self._hide_time_dis_var = tk.StringVar(self, value="5")
 
         self._log("Welcome to Easy Multi!\n ")
         self._init_widgets()
         self._options_json = self._load_options_json()
         self._refresh_options()
+
+        self.after(0, self._loop)
+
+    def _loop(self) -> None:
+        threading.Thread(target=self._inner_loop).start()
+
+    def _inner_loop(self) -> None:
+        try:
+            if not self._did_hide and self._auto_hide and len(self._windows) > 1:
+                current_window = get_current_window()
+                if current_window in self._windows and (time.time() - self._last_action_time > 60 * self._hide_time):
+                    self._hide_keypress()
+        except:
+            error = traceback.format_exc()
+            print(error)
+            self._log("Error during loop:\n" +
+                      error.replace("\n", "\\n"))
+        self.after(200, self._loop)
 
     def _refresh_options(self) -> None:
         # Hotkeys
@@ -140,6 +162,13 @@ class EasyMultiApp(tk.Tk):
         # Use Alt
         self._use_alt = self._get_setting(self._options_json, "use_alt")
         self._use_alt_dis_var.set(CHECK if self._use_alt else CROSS)
+
+        # Auto Hide
+        self._auto_hide = self._get_setting(self._options_json, "auto_hide")
+        self._auto_hide_dis_var.set(CHECK if self._auto_hide else CROSS)
+        self._hide_time = self._get_setting(self._options_json, "hide_time")
+        self._hide_time_dis_var.set(
+            f"Hide after {self._hide_time} minutes.\n(Scroll here to change)")
 
         # Save
         self._save_options_json(self._options_json)
@@ -320,6 +349,30 @@ class EasyMultiApp(tk.Tk):
         tk.Label(clear_type_frames[3], text="Speedrun #22").grid(
             row=0, column=1)
 
+    def _init_widgets_auto_hide(self, parent: tk.Frame, row: int) -> None:
+        auto_hide_frame = tk.LabelFrame(parent)
+        auto_hide_frame.grid(row=row, column=0, padx=5, pady=5, sticky="we")
+        auto_hide_frame.grid_columnconfigure(0, weight=1)
+
+        auto_hide_button_frame = tk.Frame(auto_hide_frame)
+        auto_hide_button_frame.grid(
+            row=0, column=0, padx=5, pady=5, sticky="w")
+        auto_hide_button = tk.Button(
+            auto_hide_button_frame, textvariable=self._auto_hide_dis_var, command=self._auto_hide_button)
+        auto_hide_button.grid(row=0, column=0)
+        tk.Label(auto_hide_button_frame, text="Automatically Hide").grid(
+            row=0, column=1)
+
+        hide_time_label = tk.Label(
+            auto_hide_frame, textvariable=self._hide_time_dis_var, justify=tk.LEFT)
+        hide_time_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        hide_time_label.bind("<MouseWheel>", self._scroll_hide_time)
+
+        if not SUPPORTS_BORDERLESS:
+            auto_hide_button["state"] = "disabled"
+            hover_tip = Hovertip(
+                auto_hide_button, "Borderless is not supported on your platform")
+
     # ----- exit -----
 
     def _exit(self, *args) -> None:
@@ -327,6 +380,14 @@ class EasyMultiApp(tk.Tk):
         self.destroy()
 
     # ----- buttons -----
+
+    def _scroll_hide_time(self, event) -> None:
+        is_up = event.delta > 0
+        new_hide_time = self._hide_time + (1 if is_up else -1)
+        while new_hide_time <= 0:
+            new_hide_time += 1
+        self._options_json["hide_time"] = new_hide_time
+        self._refresh_options()
 
     def _use_numpad_button(self, *args) -> None:
         if self._use_numpad and (not self._use_alt):
@@ -440,6 +501,7 @@ class EasyMultiApp(tk.Tk):
 
     def _setup_button(self, *args) -> None:
         self._log("Running setup...")
+        self._reset_action_time()
         try:
             self._abandon_windows()
             windows = get_all_mc_windows()
@@ -469,6 +531,7 @@ class EasyMultiApp(tk.Tk):
             self._log("Log copy failed (probably unsupported platform).")
 
     def _go_borderless_button(self, *args) -> None:
+        self._reset_action_time()
         if len(self._windows) == 0:
             self._log("No instances yet, please run setup.")
         else:
@@ -483,6 +546,7 @@ class EasyMultiApp(tk.Tk):
                           error.replace("\n", "\\n"))
 
     def _restore_button(self, *args) -> None:
+        self._reset_action_time()
         if len(self._windows) == 0:
             self._log("No instances yet, please run setup.")
         else:
@@ -519,6 +583,10 @@ class EasyMultiApp(tk.Tk):
         self._options_json["clear_types"] = s
         self._refresh_options()
 
+    def _auto_hide_button(self, *args) -> None:
+        self._options_json["auto_hide"] = not self._auto_hide
+        self._refresh_options()
+
     # ----- keypress -----
 
     def _reset_keypress(self) -> None:
@@ -532,6 +600,7 @@ class EasyMultiApp(tk.Tk):
                 self._validate_windows()
                 window_to_reset = get_current_window()
                 if window_to_reset in self._windows:
+                    self._reset_action_time()
                     self._running = True
                     window_to_reset = self._windows[self._windows.index(
                         window_to_reset)]
@@ -600,6 +669,7 @@ class EasyMultiApp(tk.Tk):
                 return
             current_window = get_current_window()
             if len(self._windows) > 1 and current_window in self._windows:
+                self._reset_action_time()
                 successes = 0
                 for window in self._windows:
                     if window != current_window:
@@ -619,6 +689,9 @@ class EasyMultiApp(tk.Tk):
             self._running = False
 
     # ----- general -----
+
+    def _reset_action_time(self) -> None:
+        self._last_action_time = time.time()
 
     def _clear_worlds(self) -> None:
         if self._instances_folder is None:
