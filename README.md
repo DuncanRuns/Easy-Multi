@@ -42,7 +42,12 @@ I believe I have met all of these goals.
 - Enabling "Automatically Clear" will do the above action on every single reset.
 - You can set the MultiMC Instances Folder by pressing the small folder icon.
     - Easy Multi will do its best to locate the instances folder if you do not select the correct folder. For example selecting a ".minecraft" will probably lead Easy Multi to find the instances folder.
-- In the "World Typeps to Clear" section, you can enable various types of speedrun world names which will get detected by the world clearing.
+- In the "World Types to Clear" section, you can enable various types of speedrun world names which will get detected by the world clearing.
+
+### Auto Hide Panel
+- Enabling "Automatically Hide" will enable automatic hiding of instances after a set amount of time.
+    - Automatic hiding will occur the set amount of time after the latest of any of the following actions are done: Any buttons on the control panel being pressed, or using the reset hotkey while in an instance.
+- Scrolling on the text below the Automatically Hide option will change the amount of time before instances are automatically hiden.
 
 ## Notes
 
