@@ -174,14 +174,22 @@ class EasyMultiApp(tk.Tk):
         ll.bind("<Button-1>",
                 lambda x: webbrowser.open("https://linktr.ee/DuncanRuns"))
 
-        self._init_widgets_control()
-        self._init_widgets_options()
-        self._init_widgets_log()
-        self._init_widgets_worlds()
+        left_frame = tk.Frame(self)
+        left_frame.grid(row=0, column=0, sticky="n")
+        middle_frame = tk.Frame(self)
+        middle_frame.grid(row=0, column=1, sticky="n")
+        right_frame = tk.Frame(self)
+        right_frame.grid(row=0, column=2, sticky="n")
 
-    def _init_widgets_control(self) -> None:
-        control_frame = tk.LabelFrame(self)
-        control_frame.grid(row=1, column=0, padx=5, pady=5, sticky="nes")
+        self._init_widgets_control(left_frame, 0)
+        self._init_widgets_options(left_frame, 1)
+        self._init_widgets_log(middle_frame, 0)
+        self._init_widgets_worlds(right_frame, 0)
+        self._init_widgets_auto_hide(right_frame, 1)
+
+    def _init_widgets_control(self, parent: tk.Frame, row: int) -> None:
+        control_frame = tk.LabelFrame(parent)
+        control_frame.grid(row=row, column=0, padx=5, pady=5, sticky="we")
         tk.Button(control_frame, text="Setup Instances", command=self._setup_button).grid(
             row=0, column=0, padx=5, pady=5, sticky="NESW")
         borderless_button = tk.Button(
@@ -199,9 +207,9 @@ class EasyMultiApp(tk.Tk):
             hover_tip = Hovertip(restore_button,
                                  "Borderless is not supported on your platform")
 
-    def _init_widgets_options(self) -> None:
-        options_frame = tk.LabelFrame(self)
-        options_frame.grid(row=2, column=0, padx=5, pady=5, sticky="nes")
+    def _init_widgets_options(self, parent: tk.Frame, row: int) -> None:
+        options_frame = tk.LabelFrame(parent)
+        options_frame.grid(row=row, column=0, padx=5, pady=5, sticky="we")
         tk.Button(options_frame, textvariable=self._reset_dis_var, command=self._set_reset_button).grid(
             row=0, column=0, padx=5, pady=5, sticky="NESW")
         set_hide_button_button = tk.Button(
@@ -233,9 +241,9 @@ class EasyMultiApp(tk.Tk):
                   command=self._use_alt_button).grid(row=2, column=0)
         tk.Label(ss_frame, text="Use Alt").grid(row=2, column=1, sticky="w")
 
-    def _init_widgets_log(self) -> None:
-        log_frame = tk.LabelFrame(self)
-        log_frame.grid(row=1, column=1, padx=5, pady=5, rowspan=2, sticky="n")
+    def _init_widgets_log(self, parent: tk.Frame, row: int) -> None:
+        log_frame = tk.LabelFrame(parent)
+        log_frame.grid(row=row, column=0, padx=5, pady=5, sticky="we")
         tk.Label(log_frame, textvariable=self._log_var, anchor=tk.W,
                  justify=tk.LEFT, width=50).grid(row=0, column=0, padx=5, pady=5, columnspan=3)
         ttk.Separator(log_frame, orient=tk.HORIZONTAL).grid(
@@ -245,10 +253,9 @@ class EasyMultiApp(tk.Tk):
         tk.Button(log_frame, text="Copy Log", command=self._copy_log_button).grid(
             row=2, column=2, padx=5, pady=5, sticky="e")
 
-    def _init_widgets_worlds(self) -> None:
-        worlds_frame = tk.LabelFrame(self)
-        worlds_frame.grid(row=1, column=2, padx=5,
-                          pady=5, rowspan=2, sticky="n")
+    def _init_widgets_worlds(self, parent: tk.Frame, row: int) -> None:
+        worlds_frame = tk.LabelFrame(parent)
+        worlds_frame.grid(row=row, column=0, padx=5, pady=5, sticky="we")
 
         csw_frame = tk.Frame(worlds_frame)
         csw_frame.grid(row=0, column=0, padx=5, pady=5, sticky="w")
@@ -278,7 +285,7 @@ class EasyMultiApp(tk.Tk):
             row=50, column=0, padx=5, pady=5, sticky="w")
         path_frame = tk.Frame(worlds_frame)
         path_frame.grid(row=51, column=0, padx=5, pady=0, sticky="w")
-        tk.Label(path_frame, textvariable=self._instances_folder_dis_var, anchor=tk.E, width=15,).grid(
+        tk.Label(path_frame, textvariable=self._instances_folder_dis_var, anchor=tk.E, width=15).grid(
             row=1, column=1, padx=5, pady=0, sticky="w")
         tk.Button(path_frame, text=FOLDER, command=self._set_instances_path_button).grid(
             row=1, column=0, pady=0, sticky="w")
