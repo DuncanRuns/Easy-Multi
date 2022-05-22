@@ -22,7 +22,7 @@ _MODIFIER_DICT = {
 
 
 # Unsure if numpad works here.
-def press_keys_for_time(gh_keys: list, wait_time: int = 0.1):
+def press_keys_for_time(gh_keys: List[str], wait_time: int = 0.1):
     # Convert gh module names into keyboard module names for the cases used in easy multi.
     keyboard_keys = [key.lower().replace("numpad_", "num ") for key in gh_keys]
     for key in keyboard_keys:
@@ -77,7 +77,7 @@ def read_hotkey(should_continue_callback: Callable = None):
     return KeyReader().read_hotkey(should_continue_callback)
 
 
-def format_hotkey(hotkey: list) -> str:
+def format_hotkey(hotkey: List[str]) -> str:
     string = ""
     for i in hotkey:
         if string != "":
@@ -89,11 +89,11 @@ def format_hotkey(hotkey: list) -> str:
 # Invalid modifiers gives back modifier keys that should not be pressed for a specified hotkey
 # (eg. hotkey = ["u"] will return all modifier keys)
 # However for linux, since we are  using the keyboard module, we set no invalid keys.
-def get_invalid_modifiers(hotkey: list) -> List[str]:
+def get_invalid_modifiers(hotkey: List[str]) -> List[str]:
     return []
 
 
-def are_any_keys_pressed(keys: list):
+def are_any_keys_pressed(keys: List[str]):
     for key in keys:
         if is_pressed(key):
             return True
@@ -107,7 +107,7 @@ def clear_and_stop_hotkey_checker() -> None:
         pass
 
 
-def register_hotkey(hotkey: list, callback: Callable):
+def register_hotkey(hotkey: List[str], callback: Callable):
     key_string = ""
     for key in hotkey:
         if key_string != "":

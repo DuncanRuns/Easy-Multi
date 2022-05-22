@@ -23,7 +23,7 @@ _MODIFIER_DICT = {
 
 
 # Keyboard module apparently doesn't do so well with numpad stuff, so this is useful for that.
-def press_keys_for_time(gh_keys: list, wait_time: int = 0.1):
+def press_keys_for_time(gh_keys: List[str], wait_time: int = 0.1):
     global _user32
     # Press
     for gh_key in gh_keys:
@@ -68,7 +68,7 @@ def read_hotkey(should_continue_callback: Callable = None) -> List[str]:
                 return keylist
 
 
-def format_hotkey(hotkey: list) -> str:
+def format_hotkey(hotkey: List[str]) -> str:
     string = ""
     for i in hotkey:
         if string != "":
@@ -77,7 +77,7 @@ def format_hotkey(hotkey: list) -> str:
     return string
 
 
-def get_invalid_modifiers(hotkey: list) -> List[str]:
+def get_invalid_modifiers(hotkey: List[str]) -> List[str]:
     invalid_modifiers = MODIFIER_KEYS.copy()
     for modifier in BASIC_MODIFIER_KEYS:
         if modifier in hotkey:
@@ -90,7 +90,7 @@ def get_invalid_modifiers(hotkey: list) -> List[str]:
     return invalid_modifiers
 
 
-def are_any_keys_pressed(key_names: list) -> bool:
+def are_any_keys_pressed(key_names: List[str]) -> bool:
     for key_name in key_names:
         if is_pressed(key_name):
             return True
@@ -102,7 +102,7 @@ def clear_and_stop_hotkey_checker() -> None:
     global_hotkeys.clear_hotkeys()
 
 
-def register_hotkey(hotkey: list, callback) -> None:
+def register_hotkey(hotkey: List[str], callback) -> None:
     global_hotkeys.register_hotkeys([
         [hotkey, callback, None]
     ])

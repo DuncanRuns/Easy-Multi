@@ -1,8 +1,7 @@
-# Abstraction layer on top of win32gui
+# Abstraction layer on top of win32gui and win32process
 
-import re, win32con
-from typing import List
-from win32 import win32gui
+import re, win32con, win32process, subprocess, win32gui
+from typing import List, Union
 from win32com import client
 
 shell = client.Dispatch("WScript.Shell")
@@ -33,7 +32,7 @@ def get_hwnd_title(hwnd: int) -> str:
     return win32gui.GetWindowText(hwnd)
 
 
-def _win_enum_handler(hwnd: int, hwnd_list: list):
+def _win_enum_handler(hwnd: int, hwnd_list: List[str]):
     hwnd_list.insert(0, hwnd)
 
 
@@ -107,6 +106,68 @@ def activate_hwnd(hwnd: int) -> None:
 
 def move_hwnd(hwnd: int, x: int, y: int, w: int, h: int):
     win32gui.MoveWindow(hwnd, x, y, w, h, False)
+
+
+def take_arg(string: str, ind: int) -> str:
+    """Takes a single argument or word from a string.
+
+    Args:
+        string (str): utf-8 string containing multiple words.
+        ind (int): Starting index of argument.
+
+    Returns:
+        str: The argument at the specified `index` of `string`.
+    """
+    sub = string[ind:]
+    if sub == "":
+        return ""
+    while sub[0] == " ":
+        sub = sub[1:]
+        if sub == "":
+            return ""
+    if sub[0] == '"':
+        scan_ind = 1
+        bsc = 0
+        while scan_ind < len(sub):
+            if sub[scan_ind] == '\\':
+                bsc += 1
+            elif sub[scan_ind] == '"':
+                if bsc % 2 == 0:
+                    break
+                else:
+                    bsc = 0
+            else:
+                bsc = 0
+            scan_ind += 1
+        if scan_ind == len(sub):
+            raise  # QUOTATION WAS NOT ENDED
+        return sub[1:scan_ind].encode('utf-8').decode('unicode_escape')
+    else:
+        scan_ind = 1
+        while scan_ind < len(sub) and scan_ind:
+            if sub[scan_ind] == " ":
+                break
+            scan_ind += 1
+        return sub[:scan_ind]
+
+
+def get_mc_dir(pid: int) -> Union[str, None]:
+    # Thanks to the creator of MoveWorlds-v0.3.ahk (probably specnr)
+    cmd = f"powershell.exe \"$proc = Get-WmiObject Win32_Process -Filter \\\"ProcessId = {str(pid)}\\\";$proc.CommandLine\""
+    p = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE)
+    response = p.communicate()[0].decode()
+    if "--gameDir" in response:
+        ind = response.index("--gameDir") + 10
+        return take_arg(response, ind).replace("\\", "/")
+    elif "\"-Djava.library.path=" in response:
+        ind = response.index("\"-Djava.library.path=")
+        natives_path = take_arg(response, ind)[20:].replace("\\", "/")
+        return os.path.join(os.path.split(natives_path)[0], ".minecraft").replace("\\", "/")
+
+
+def get_pid_from_hwnd(hwnd: int):
+    return win32process.GetWindowThreadProcessId(hwnd)[1]
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ from tkinter import messagebox as tkMessageBox, ttk
 from instance_util import *
 from sys import maxsize
 from idlelib.tooltip import Hovertip
+from typing import List, Union
 
 system_type = platform.system()
 
@@ -716,7 +717,7 @@ class EasyMultiApp(tk.Tk):
         except:
             return False
 
-    def _set_windows(self, windows: list) -> None:
+    def _set_windows(self, windows: List) -> None:
         self._total_var.set("Current Instances: " + str(len(windows)))
         self._windows = windows
 

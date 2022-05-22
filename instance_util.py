@@ -2,27 +2,27 @@
 
 import os, re, shutil
 from tkinter import filedialog as tkFileDialog
-from typing import List, Union
+from typing import Callable, List, Union
 
 
-NEW_WORLD_RE = "^New World( \\(\\d+\\))?$"
-RSPEEDRUN_RE = "RandomSpeedrun #\\d+$"
-SSPEEDRUN_RE = "SetSpeedrun #\\d+$"
-SPEEDRUN_RE = "Speedrun #\\d+$"
+NEW_WORLD_RE = r"^New World( \(\d+\))?$"
+RSPEEDRUN_RE = r"RandomSpeedrun #\d+$"
+SSPEEDRUN_RE = r"SetSpeedrun #\d+$"
+SPEEDRUN_RE = r"Speedrun #\d+$"
 
 
 def ask_for_directory(og_path: str = None):
     return tkFileDialog.askdirectory(initialdir=og_path)
 
 
-def _matches_one(match_list: list, string: str):
+def _matches_one(match_list: List[Callable], string: str):
     for match in match_list:
         if match(string):
             return True
     return False
 
 
-def _get_all_matches(match_list: list, names: list):
+def _get_all_matches(match_list: List[Callable], names: List[str]):
     good_names = []
     for name in names:
         if _matches_one(match_list, name):
@@ -30,7 +30,7 @@ def _get_all_matches(match_list: list, names: list):
     return good_names
 
 
-def delete_all_in_instance(instance_path: str, regex_list: list, except_for=0) -> int:
+def delete_all_in_instance(instance_path: str, regex_list: List[str], except_for=0) -> int:
     count = 0
     saves_path = os.path.join(instance_path, ".minecraft", "saves")
     if os.path.isdir(saves_path):
@@ -49,7 +49,7 @@ def delete_all_in_instance(instance_path: str, regex_list: list, except_for=0) -
     return count
 
 
-def delete_all_worlds(instances_path: str, regex_list: list, except_for=0) -> int:
+def delete_all_worlds(instances_path: str, regex_list: List[str], except_for=0) -> int:
     count = 0
     for instance_path in get_all_instance_paths(instances_path):
         count += delete_all_in_instance(instance_path, regex_list, except_for)

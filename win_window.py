@@ -7,6 +7,8 @@ import win_util
 class Window:
     def __init__(self, hwnd):
         self._hwnd = hwnd
+        self._pid = win_util.get_pid_from_hwnd(hwnd)
+        self._dir = None
         self._original_title = win_util.get_hwnd_title(self._hwnd)
 
     def get_original_title(self) -> str:
@@ -47,11 +49,16 @@ class Window:
     def get_hwnd(self) -> int:
         return self._hwnd
 
-    def __eq__(self, __o: object) -> bool:
-        return self._hwnd == __o.get_hwnd()
+    def get_mc_dir(self) -> str:
+        if self._dir is not None:
+            return self._dir
+        return win_util.get_mc_dir(self._pid)
 
     def exists(self) -> bool:
         return win_util.get_hwnd_exists(self._hwnd)
+
+    def __eq__(self, __o: object) -> bool:
+        return self._hwnd == __o.get_hwnd()
 
 
 def get_all_mc_windows(old_windows=[]) -> List[Window]:
