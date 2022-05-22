@@ -1,7 +1,7 @@
 # Abstraction layer on top of win32api and uses some stuff from global_hotkeys
 
 import time, global_hotkeys, ctypes
-from typing import Callable
+from typing import Callable, List
 from global_hotkeys.keycodes import vk_key_names
 from win32 import win32api
 
@@ -39,7 +39,7 @@ def get_similar_modifiers(key_name: str):
     return _MODIFIER_DICT[key_name]
 
 
-def _get_nm_keys() -> list:
+def _get_nm_keys() -> List[str]:
     nm_keys = []
     for name in vk_key_names.keys():
         if name not in MODIFIER_KEYS and name not in BASIC_MODIFIER_KEYS:
@@ -54,7 +54,7 @@ def is_pressed(ghk_name: str):
     return win32api.GetAsyncKeyState(vk_key_names[ghk_name]) < 0
 
 
-def read_hotkey(should_continue_callback: Callable = None) -> list:
+def read_hotkey(should_continue_callback: Callable = None) -> List[str]:
     found_key = ""
     while found_key == "" and (should_continue_callback is None or should_continue_callback()):
         time.sleep(0.01)
@@ -77,7 +77,7 @@ def format_hotkey(hotkey: list) -> str:
     return string
 
 
-def get_invalid_modifiers(hotkey: list) -> list:
+def get_invalid_modifiers(hotkey: list) -> List[str]:
     invalid_modifiers = MODIFIER_KEYS.copy()
     for modifier in BASIC_MODIFIER_KEYS:
         if modifier in hotkey:

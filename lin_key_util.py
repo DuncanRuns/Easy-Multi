@@ -4,7 +4,7 @@
 # NOTE(duncan): Please stop shouting
 
 import keyboard, time, threading
-from typing import Callable, Union
+from typing import Callable, List
 
 MODIFIER_KEYS = ["left ctrl", "right ctrl", "left shift",
                  "right shift", "left menu", "right menu"]
@@ -89,7 +89,7 @@ def format_hotkey(hotkey: list) -> str:
 # Invalid modifiers gives back modifier keys that should not be pressed for a specified hotkey
 # (eg. hotkey = ["u"] will return all modifier keys)
 # However for linux, since we are  using the keyboard module, we set no invalid keys.
-def get_invalid_modifiers(hotkey: list) -> list:
+def get_invalid_modifiers(hotkey: list) -> List[str]:
     return []
 
 

@@ -2,7 +2,7 @@
 
 import os, re, shutil
 from tkinter import filedialog as tkFileDialog
-from typing import Union
+from typing import List, Union
 
 
 NEW_WORLD_RE = "^New World( \\(\\d+\\))?$"
@@ -88,7 +88,7 @@ def count_instances(instances_path: str) -> int:
     return len(get_all_instance_paths(instances_path))
 
 
-def get_all_instance_paths(instances_path: str) -> list:
+def get_all_instance_paths(instances_path: str) -> List[str]:
     try:
         instance_paths = []
         for instance_name in os.listdir(instances_path):

@@ -1,5 +1,6 @@
 # Object oriented abstraction layer on top of win_util
 
+from typing import List
 import win_util
 
 
@@ -53,7 +54,7 @@ class Window:
         return win_util.get_hwnd_exists(self._hwnd)
 
 
-def get_all_mc_windows(old_windows=[]) -> list:
+def get_all_mc_windows(old_windows=[]) -> List[Window]:
     hwnds = win_util.get_all_mc_hwnds([i.get_hwnd() for i in old_windows])
     windows = []
     for hwnd in hwnds:

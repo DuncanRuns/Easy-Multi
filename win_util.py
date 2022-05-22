@@ -1,6 +1,7 @@
 # Abstraction layer on top of win32gui
 
 import re, win32con
+from typing import List
 from win32 import win32gui
 from win32com import client
 
@@ -36,13 +37,13 @@ def _win_enum_handler(hwnd: int, hwnd_list: list):
     hwnd_list.insert(0, hwnd)
 
 
-def get_all_hwnds() -> list:
+def get_all_hwnds() -> List[int]:
     hwnd_list = []
     win32gui.EnumWindows(_win_enum_handler, hwnd_list)
     return hwnd_list
 
 
-def get_all_mc_hwnds(old_hwnds=[]) -> list:
+def get_all_mc_hwnds(old_hwnds=[]) -> List[int]:
     hwnds = []
     mc_match = re.compile("Minecraft\\*? 1\\.[1-9]\\d*\\.[1-9]\\d*.*").match
     for hwnd in get_all_hwnds():
