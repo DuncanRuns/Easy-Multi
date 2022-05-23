@@ -132,7 +132,7 @@ class EasyMultiApp(tk.Tk):
     def _refresh_options(self) -> None:
         # Hotkeys
 
-        self._setup_hotkeys()
+        self._init_hotkeys()
 
         # Window Size
         self._window_size = self._get_setting(
@@ -174,7 +174,7 @@ class EasyMultiApp(tk.Tk):
         # Save
         self._save_options_json(self._options_json)
 
-    def _setup_hotkeys(self) -> None:
+    def _init_hotkeys(self) -> None:
         clear_and_stop_hotkey_checker()
 
         self._reset_hotkey = self._get_setting(
