@@ -6,10 +6,10 @@ import win_util
 
 class Window:
     def __init__(self, hwnd):
-        self._hwnd = hwnd
-        self._pid = win_util.get_pid_from_hwnd(hwnd)
-        self._dir = None
-        self._original_title = win_util.get_hwnd_title(self._hwnd)
+        self._hwnd: int = hwnd
+        self._pid: int = win_util.get_pid_from_hwnd(hwnd)
+        self._dir: str = 0
+        self._original_title: str = win_util.get_hwnd_title(self._hwnd)
 
     def get_original_title(self) -> str:
         return self._original_title
@@ -50,9 +50,10 @@ class Window:
         return self._hwnd
 
     def get_mc_dir(self) -> str:
-        if self._dir is not None:
+        if self._dir != 0:
             return self._dir
-        return win_util.get_mc_dir(self._pid)
+        self._dir = win_util.get_mc_dir(self._pid)
+        return self._dir
 
     def exists(self) -> bool:
         return win_util.get_hwnd_exists(self._hwnd)
