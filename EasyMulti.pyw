@@ -717,7 +717,7 @@ class EasyMultiApp(tk.Tk):
         except:
             return False
 
-    def _set_windows(self, windows: List) -> None:
+    def _set_windows(self, windows: List[Window]) -> None:
         self._total_var.set("Current Instances: " + str(len(windows)))
         self._windows = windows
 
