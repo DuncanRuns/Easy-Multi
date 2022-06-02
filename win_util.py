@@ -27,6 +27,22 @@ SWP_NOZORDER = 0x0004  # const for setPos
 FULLSCREEN_STYLE = -1241513984
 REGULAR_STYLE = 382664704
 
+"""
+Tested Style Values
+
+Fullscreen: -1241513984
+0xffffffffb6000000
+
+Borderless:  369623040
+0x0000000016080000
+
+Regular Window: 382664704
+0x0000000016cf0000
+
+Maximized Window: 399441920
+0x0000000017cf0000
+"""
+
 
 def get_current_hwnd() -> int:
     return win32gui.GetForegroundWindow()
