@@ -1,6 +1,6 @@
 # Abstraction layer on top of win32gui and win32process
 
-import re, win32con, win32process, subprocess, win32gui
+import re, win32con, win32process, subprocess, win32gui, os
 from typing import List, Union
 from win32com import client
 
@@ -168,6 +168,14 @@ def get_mc_dir(pid: int) -> Union[str, None]:
 
 def get_pid_from_hwnd(hwnd: int) -> int:
     return win32process.GetWindowThreadProcessId(hwnd)[1]
+
+
+def is_hwnd_fullscreen(hwnd: int) -> bool:
+    style_long = get_hwnd_style(hwnd)
+    # Fullscreen style is around 0xffffffffb6000000 or -1241513984
+    # Borderless, Maximized, and Regular window style is around 0x0000000016cf0000 or 382664704
+    # Whichever the current style is closer to should give if it is fullscreen or not
+    return abs(style_long + 1241513984) < abs(style_long - 382664704)
 
 
 if __name__ == "__main__":
