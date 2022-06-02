@@ -650,13 +650,15 @@ class EasyMultiApp(tk.Tk):
         keyboard.press_and_release("esc")
 
     def _reset_world(self, window_to_reset: Window):
-        pre19 = False
+        # Assumes window is active
+        pre_one_nine = False
         try:
-            pre19 = int(window_to_reset.get_original_title().split(".")[1]) < 9
+            pre_one_nine = int(
+                window_to_reset.get_original_title().split(".")[1]) < 9
         except:
             pass
         keyboard.press_and_release("esc")
-        if pre19:
+        if pre_one_nine:
             time.sleep(0.07)  # Uh oh magic number
             keyboard.press_and_release("tab")
         else:
