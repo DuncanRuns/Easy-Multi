@@ -23,6 +23,10 @@ WS_DLGFRAME = 0x00400000
 
 SWP_NOZORDER = 0x0004  # const for setPos
 
+# Custom Constants
+FULLSCREEN_STYLE = -1241513984
+REGULAR_STYLE = 382664704
+
 
 def get_current_hwnd() -> int:
     return win32gui.GetForegroundWindow()
@@ -175,7 +179,7 @@ def is_hwnd_fullscreen(hwnd: int) -> bool:
     # Fullscreen style is around 0xffffffffb6000000 or -1241513984
     # Borderless, Maximized, and Regular window style is around 0x0000000016cf0000 or 382664704
     # Whichever the current style is closer to should give if it is fullscreen or not
-    return abs(style_long + 1241513984) < abs(style_long - 382664704)
+    return abs(style_long - FULLSCREEN_STYLE) < abs(style_long - REGULAR_STYLE)
 
 
 if __name__ == "__main__":
