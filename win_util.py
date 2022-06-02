@@ -32,7 +32,7 @@ def get_hwnd_title(hwnd: int) -> str:
     return win32gui.GetWindowText(hwnd)
 
 
-def _win_enum_handler(hwnd: int, hwnd_list: List[str]):
+def _win_enum_handler(hwnd: int, hwnd_list: List[str]) -> None:
     hwnd_list.insert(0, hwnd)
 
 
@@ -166,7 +166,7 @@ def get_mc_dir(pid: int) -> Union[str, None]:
         return os.path.join(os.path.split(natives_path)[0], ".minecraft").replace("\\", "/")
 
 
-def get_pid_from_hwnd(hwnd: int):
+def get_pid_from_hwnd(hwnd: int) -> int:
     return win32process.GetWindowThreadProcessId(hwnd)[1]
 
 

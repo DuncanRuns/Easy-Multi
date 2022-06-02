@@ -25,7 +25,7 @@ else:
     print("Unsupported system type!")
     raise
 
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 
 
 def resource_path(relative_path):
@@ -228,6 +228,8 @@ class EasyMultiApp(tk.Tk):
         restore_button = tk.Button(
             control_frame, text="Restore Windows", command=self._restore_button)
         restore_button.grid(row=2, column=0, padx=5, pady=5, sticky="NESW")
+        tk.Button(control_frame, text="Reset Titles", command=self._reset_titles).grid(
+            row=3, column=0, padx=5, pady=5, sticky="NESW")
 
         if not SUPPORTS_BORDERLESS:
             borderless_button["state"] = "disabled"
@@ -513,10 +515,7 @@ class EasyMultiApp(tk.Tk):
                 self._set_windows(windows)
                 self._log("Found " + str(len(windows)) +
                           " minecraft instances.")
-                i = 0
-                for window in windows:
-                    i += 1
-                    window.set_title(str(i))
+                self._reset_titles()
         except:
             error = traceback.format_exc()
             print(error)
@@ -690,6 +689,10 @@ class EasyMultiApp(tk.Tk):
             self._running = False
 
     # ----- general -----
+
+    def _reset_titles(self) -> None:
+        for i, window in enumerate(self._windows):
+            window.set_title(str(i + 1))
 
     def _reset_action_time(self) -> None:
         self._last_action_time = time.time()
