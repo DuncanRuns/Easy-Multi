@@ -11,8 +11,6 @@ DEFAULT_OPTIONS = {
     "hide_time": 5
 }
 
-CHECK = "✅"
-CROSS = "❎"
 FOLDER = "📁"
 
 SUPPORTS_BORDERLESS = True
