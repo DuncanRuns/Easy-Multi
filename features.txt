@@ -1,0 +1,14 @@
+Current Features:
+
+
+To-Do:
+- Logging, copy log button, and log file
+- Reset, Hide, and Background Reset Hotkeys. As well as being able to clear them (right click)
+- Reset Hotkey
+- Hide Hotkey
+- Auto Hide after x minutes
+- Background Reset Hotkey
+- Setup Instances - Auto detect order using get_mc_dir for windows
+- Fullscreen Support
+- Borderless Support and custom window sizes and position
+- Automated world clearing (provide multimc instances folder option for linux)
