@@ -4,7 +4,7 @@ from tkinter import messagebox as tkMessageBox, ttk
 from instance_util import *
 from sys import maxsize
 from idlelib.tooltip import Hovertip
-from typing import List, Union
+from typing import List
 
 system_type = platform.system()
 
