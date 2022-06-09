@@ -1,29 +1,43 @@
-import os, json, keyboard, time, traceback, clipboard, threading, webbrowser, platform
-import tkinter as tk
-from tkinter import messagebox as tkMessageBox, ttk
-from instance_util import *
-from sys import maxsize
-from idlelib.tooltip import Hovertip
-from typing import List
+try:
+    import os, json, keyboard, time, traceback, clipboard, threading, webbrowser, platform
+    import tkinter as tk
+    from tkinter import messagebox as tkMessageBox, ttk
+    from instance_util import *
+    from sys import maxsize
+    from idlelib.tooltip import Hovertip
+    from typing import List
 
-system_type = platform.system()
+    system_type = platform.system()
 
-if system_type == "":
-    print("System type cannot be determined!")
-    raise
-elif system_type == "Windows":
-    print("Running Easy Multi on Windows")
-    from win_window import *
-    from win_key_util import *
-    from win_constants import *
-elif system_type == "Linux":
-    print("Running Easy Multi on Linux")
-    from lin_window import *
-    from lin_key_util import *
-    from lin_constants import *
-else:
-    print("Unsupported system type!")
-    raise
+    if system_type == "":
+        print("System type cannot be determined!")
+        raise
+    elif system_type == "Windows":
+        print("Running Easy Multi on Windows")
+        from win_window import *
+        from win_key_util import *
+        from win_constants import *
+    elif system_type == "Linux":
+        print("Running Easy Multi on Linux")
+        from lin_window import *
+        from lin_key_util import *
+        from lin_constants import *
+    else:
+        print("Unsupported system type!")
+        raise
+except:
+    import tkinter as tk
+    import tkinter.messagebox as tkMessageBox
+    tk.Tk().withdraw()
+    print("ERROR DURING IMPORTS\nINSTALLING DEPENDENCIES (Windows Only)")
+    tkMessageBox.showinfo("EasyMulti: Dependencies missing?",
+                          "Something went wrong while importing dependencies. Close this dialog to attempt to install dependencies.")
+    import win_install_dependencies
+    win_install_dependencies.main()
+    tkMessageBox.showinfo("EasyMulti: Dependencies installed",
+                          "Dependency installation has been attempted. Please restart " + __file__ + ".")
+    exit()
+
 
 VERSION = "1.5.0"
 

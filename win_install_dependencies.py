@@ -12,7 +12,6 @@ def main():
     for dependency in DEPENDENCIES:
         subprocess.check_call(
             [sys.executable, "-m", "pip", "install", dependency])
-    input("Dependency installation has been attempted. Press enter to close.")
 
 
 if __name__ == "__main__":
