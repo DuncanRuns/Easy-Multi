@@ -32,7 +32,7 @@ class Window:
             return True
         return False
 
-    def untiny(self, window_size) -> None:
+    def untiny(self, window_size: List[int]) -> None:
         if self.is_borderless():
             win_util.move_hwnd(
                 self._hwnd, 0, 0, window_size[0], window_size[1])
@@ -40,8 +40,8 @@ class Window:
     def is_borderless(self) -> bool:
         return win_util.is_hwnd_borderless(self._hwnd)
 
-    def go_borderless(self, window_size) -> None:
-        win_util.set_hwnd_borderless(self._hwnd, window_size)
+    def go_borderless(self, pos: List[int], window_size: List[int]) -> None:
+        win_util.set_hwnd_borderless(self._hwnd, pos, window_size)
 
     def restore_window(self, offset=0):
         win_util.undo_hwnd_borderless(self._hwnd, offset)

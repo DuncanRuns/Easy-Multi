@@ -89,13 +89,13 @@ def restore_hwnd(hwnd: int) -> None:
     win32gui.ShowWindow(hwnd, SW_RESTORE)
 
 
-def set_hwnd_borderless(hwnd: int, window_size=(1920, 1080)) -> None:
+def set_hwnd_borderless(hwnd: int, pos=(0, 0), window_size=(1920, 1080)) -> None:
     restore_hwnd(hwnd)
     style = get_hwnd_style(hwnd)
     style &= ~(WS_BORDER | WS_DLGFRAME | WS_THICKFRAME |
                WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU)
     set_hwnd_style(hwnd, style)
-    win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, 0, 0,
+    win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, pos[0], pos[1],
                           window_size[0], window_size[1], win32con.SWP_SHOWWINDOW)
 
 
