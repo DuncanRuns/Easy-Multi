@@ -64,7 +64,8 @@ def get_all_hwnds() -> List[int]:
 
 def get_all_mc_hwnds(old_hwnds=[]) -> List[int]:
     hwnds = []
-    mc_match = re.compile("Minecraft\\*? 1\\.[1-9]\\d*\\.[1-9]\\d*.*").match
+    mc_match = re.compile(
+        r"^Minecraft\*? 1\.[1-9]\d*(\.[1-9]\d*)?( .*)?$").match
     for hwnd in get_all_hwnds():
         if hwnd in old_hwnds or mc_match(get_hwnd_title(hwnd)):
             hwnds.append(hwnd)
