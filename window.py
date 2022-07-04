@@ -62,11 +62,15 @@ class Window:
         return self._dir
 
     def press_reset_keys(self) -> None:
+        # Runs shift-tab-enter twice in a row to ensure reset happens
         hwnd_util.autoit_send_to_hwnd(
-            self._hwnd, "{ESC}{SHIFTDOWN}{TAB}{SHIFTUP}{ENTER}")
+            self._hwnd, "{ESC}{SHIFTDOWN}{TAB}{SHIFTUP}{ENTER}{ESC}{SHIFTDOWN}{TAB}{SHIFTUP}{ENTER}")
 
     def press_f3_esc(self) -> None:
         hwnd_util.autoit_send_to_hwnd(self._hwnd, "{F3 down}{ESC}{F3 up}")
+
+    def press_f11(self) -> None:
+        hwnd_util.autoit_send_to_hwnd(self._hwnd, "{F11}")
 
     def exists(self) -> bool:
         return hwnd_util.get_hwnd_exists(self._hwnd)

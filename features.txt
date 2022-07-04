@@ -12,3 +12,15 @@ To-Do:
 - Fullscreen Support
 - Borderless Support and custom window sizes and position
 - Automated world clearing
+
+
+How wall should work
+
+While in wall view:
+- Use OBS Projector
+- Left click to set instance to play
+- Reset hotkey to reset all instances that have not been set to play
+- Right click to play set instances
+While in game:
+- Background reset hotkey to reset all instances that are not set to play
+- Reset hotkey to reset current instance and move on to the next instance that is set to play or back to wall view

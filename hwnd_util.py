@@ -85,10 +85,6 @@ def set_hwnd_style(hwnd: int, style: int) -> None:
     win32gui.SetWindowLong(hwnd, GWL_STYLE, style)
 
 
-def restore_hwnd(hwnd: int) -> None:
-    win32gui.ShowWindow(hwnd, SW_RESTORE)
-
-
 def autoit_send_to_hwnd(hwnd: int, send_text: str) -> None:
     """Use AutoIt to reliably send inputs to a window.
     Uses an AHK style input text, see more: https://www.autoitscript.com/autoit3/docs/functions/Send.htm
@@ -101,7 +97,6 @@ def autoit_send_to_hwnd(hwnd: int, send_text: str) -> None:
 
 
 def set_hwnd_borderless(hwnd: int) -> None:
-    # restore_hwnd(hwnd)
     style = get_hwnd_style(hwnd)
     style &= ~(WS_BORDER | WS_DLGFRAME | WS_THICKFRAME |
                WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU)
@@ -119,7 +114,6 @@ def is_hwnd_borderless(hwnd: int) -> bool:
 
 
 def undo_hwnd_borderless(hwnd, offset=0) -> None:
-    restore_hwnd(hwnd)
     set_hwnd_style(hwnd, 382664704)
     move_hwnd(hwnd, 60 * offset, 60 * offset, 900, 520)
 
