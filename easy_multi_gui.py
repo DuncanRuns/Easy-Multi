@@ -1,6 +1,6 @@
 from tkinter import ttk
 import tkinter as tk
-from EasyMulti import *
+from easy_multi import *
 
 
 class EasyMultiGUI(tk.Tk):

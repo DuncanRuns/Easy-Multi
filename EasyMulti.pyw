@@ -4,7 +4,7 @@
 
 import tkinter.messagebox as tkMessageBox
 import traceback
-from EasyMultiGUI import *
+from easy_multi_gui import *
 
 
 def main():

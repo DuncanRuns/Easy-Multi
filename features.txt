@@ -11,4 +11,4 @@ To-Do:
 - Setup Instances - Auto detect order using get_mc_dir for windows
 - Fullscreen Support
 - Borderless Support and custom window sizes and position
-- Automated world clearing (provide multimc instances folder option for linux)
+- Automated world clearing
