@@ -40,8 +40,14 @@ class Window:
     def is_borderless(self) -> bool:
         return hwnd_util.is_hwnd_borderless(self._hwnd)
 
-    def go_borderless(self, pos: List[int], window_size: List[int]) -> None:
-        hwnd_util.set_hwnd_borderless(self._hwnd, pos, window_size)
+    def is_fullscreen(self) -> bool:
+        return hwnd_util.is_hwnd_fullscreen(self._hwnd)
+
+    def go_borderless(self) -> None:
+        hwnd_util.set_hwnd_borderless(self._hwnd)
+
+    def move(self, pos: List[int], window_size: List[int]) -> None:
+        hwnd_util.move_hwnd(self._hwnd, *pos, *window_size)
 
     def restore_window(self, offset=0):
         hwnd_util.undo_hwnd_borderless(self._hwnd, offset)
@@ -54,6 +60,13 @@ class Window:
             return self._dir
         self._dir = hwnd_util.get_mc_dir(self._pid)
         return self._dir
+
+    def press_reset_keys(self) -> None:
+        hwnd_util.autoit_send_to_hwnd(
+            self._hwnd, "{ESC}{SHIFTDOWN}{TAB}{SHIFTUP}{ENTER}")
+
+    def press_f3_esc(self) -> None:
+        hwnd_util.autoit_send_to_hwnd(self._hwnd, "{F3 down}{ESC}{F3 up}")
 
     def exists(self) -> bool:
         return hwnd_util.get_hwnd_exists(self._hwnd)

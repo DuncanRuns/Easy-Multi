@@ -1,6 +1,6 @@
 # Abstraction layer on top of win32gui and win32process
 
-import re, win32con, win32process, subprocess, win32gui, os
+import re, win32con, win32process, subprocess, win32gui, os, autoit
 from typing import List, Union
 from win32com import client
 
@@ -89,14 +89,25 @@ def restore_hwnd(hwnd: int) -> None:
     win32gui.ShowWindow(hwnd, SW_RESTORE)
 
 
-def set_hwnd_borderless(hwnd: int, pos=(0, 0), window_size=(1920, 1080)) -> None:
-    restore_hwnd(hwnd)
+def autoit_send_to_hwnd(hwnd: int, send_text: str) -> None:
+    """Use AutoIt to reliably send inputs to a window.
+    Uses an AHK style input text, see more: https://www.autoitscript.com/autoit3/docs/functions/Send.htm
+
+    Args:
+        hwnd (int): Window ID to send inputs to.
+        send_text (str): AutoIt send text.
+    """
+    autoit.control_send_by_handle(hwnd, hwnd, send_text)
+
+
+def set_hwnd_borderless(hwnd: int) -> None:
+    # restore_hwnd(hwnd)
     style = get_hwnd_style(hwnd)
     style &= ~(WS_BORDER | WS_DLGFRAME | WS_THICKFRAME |
                WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU)
     set_hwnd_style(hwnd, style)
-    win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, pos[0], pos[1],
-                          window_size[0], window_size[1], win32con.SWP_SHOWWINDOW)
+    # win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, pos[0], pos[1],
+    #                      window_size[0], window_size[1], win32con.SWP_SHOWWINDOW)
 
 
 def is_hwnd_borderless(hwnd: int) -> bool:
