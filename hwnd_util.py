@@ -86,7 +86,9 @@ def set_hwnd_style(hwnd: int, style: int) -> None:
 
 
 def autoit_send_to_hwnd(hwnd: int, send_text: str) -> None:
-    """Use AutoIt to reliably send inputs to a window.
+    """
+    Use AutoIt to reliably send inputs to a window.
+    If sending to a Minecraft window while in a different Minecraft window, it will crash Minecraft.
     Uses an AHK style input text, see more: https://www.autoitscript.com/autoit3/docs/functions/Send.htm
 
     Args:
