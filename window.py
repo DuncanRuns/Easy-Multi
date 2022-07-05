@@ -61,16 +61,22 @@ class Window:
         self._dir = hwnd_util.get_mc_dir(self._pid)
         return self._dir
 
-    def press_reset_keys(self) -> None:
-        # Runs shift-tab-enter twice in a row to ensure reset happens
+    def remote_reset_keys(self) -> None:
+        """
+        Runs esc, shift-tab, enter twice on the window.
+
+        WARNING: Running when a different Minecraft is selected will result in a crash.
+        """
         hwnd_util.autoit_send_to_hwnd(
             self._hwnd, "{ESC}{SHIFTDOWN}{TAB}{SHIFTUP}{ENTER}{ESC}{SHIFTDOWN}{TAB}{SHIFTUP}{ENTER}")
 
-    def press_f3_esc(self) -> None:
-        hwnd_util.autoit_send_to_hwnd(self._hwnd, "{F3 down}{ESC}{F3 up}")
+    def remote_f3_esc(self) -> None:
+        """
+        Runs f3+esc on the window.
 
-    def press_f11(self) -> None:
-        hwnd_util.autoit_send_to_hwnd(self._hwnd, "{F11}")
+        WARNING: Running when a different Minecraft is selected will result in a crash.
+        """
+        hwnd_util.autoit_send_to_hwnd(self._hwnd, "{F3 down}{ESC}{F3 up}")
 
     def exists(self) -> bool:
         return hwnd_util.get_hwnd_exists(self._hwnd)
