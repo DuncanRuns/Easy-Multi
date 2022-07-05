@@ -1,7 +1,7 @@
 # Object oriented abstraction layer on top of win_util
 
 from typing import List
-import hwnd_util
+import hwnd_util, win32con
 
 
 class Window:
@@ -64,19 +64,20 @@ class Window:
     def remote_reset_keys(self) -> None:
         """
         Runs esc, shift-tab, enter twice on the window.
-
-        WARNING: Running when a different Minecraft is selected will result in a crash on this window.
         """
-        hwnd_util.autoit_send_to_hwnd(
-            self._hwnd, "{ESC}{SHIFTDOWN}{TAB}{SHIFTUP}{ENTER}{ESC}{SHIFTDOWN}{TAB}{SHIFTUP}{ENTER}")
+        hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_ESCAPE)
+        hwnd_util.send_keydown_to_hwnd(self._hwnd, win32con.VK_LSHIFT)
+        hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_TAB)
+        hwnd_util.send_keyup_to_hwnd(self._hwnd, win32con.VK_LSHIFT)
+        hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_RETURN, 0)
 
     def remote_f3_esc(self) -> None:
         """
         Runs f3+esc on the window.
-
-        WARNING: Running when a different Minecraft is selected will result in a crash on this window.
         """
         hwnd_util.autoit_send_to_hwnd(self._hwnd, "{F3 down}{ESC}{F3 up}")
+        hwnd_util.send_keydown_to_hwnd(self._hwnd, win32con.VK_F3)
+        hwnd_util.send_keyup_to_hwnd(self._hwnd, win32con.VK_F3)
 
     def exists(self) -> bool:
         return hwnd_util.get_hwnd_exists(self._hwnd)

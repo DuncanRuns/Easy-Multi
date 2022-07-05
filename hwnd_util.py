@@ -1,7 +1,7 @@
 # Abstraction layer on top of win32gui and win32process
 
-import re, win32con, win32process, subprocess, win32gui, os, autoit
-from typing import List, Union
+import re, win32con, win32process, subprocess, win32api, win32gui, os, time
+from typing import List, Union, Tuple
 from win32com import client
 
 shell = client.Dispatch("WScript.Shell")
@@ -85,18 +85,48 @@ def get_hwnd_style(hwnd: int) -> int:
 def set_hwnd_style(hwnd: int, style: int) -> None:
     win32gui.SetWindowLong(hwnd, GWL_STYLE, style)
 
+# LPARAM STUFF
+# https://stackoverflow.com/questions/54638741/how-is-the-lparam-of-postmessage-constructed
 
-def autoit_send_to_hwnd(hwnd: int, send_text: str) -> None:
-    """
-    Use AutoIt to reliably send inputs to a window.
-    If sending to a Minecraft window while in a different Minecraft window, it will crash Minecraft.
-    Uses an AHK style input text, see more: https://www.autoitscript.com/autoit3/docs/functions/Send.htm
 
-    Args:
-        hwnd (int): Window ID to send inputs to.
-        send_text (str): AutoIt send text.
-    """
-    autoit.control_send_by_handle(hwnd, hwnd, send_text)
+def virtual_key_to_scan_code(virtual_key: int) -> Tuple[int, bool]:
+    scan_code = win32api.MapVirtualKey(virtual_key, 0)
+    is_extended = virtual_key in [win32con.VK_RMENU, win32con.VK_RCONTROL, win32con.VK_LEFT,
+                                  win32con.VK_UP, win32con.VK_RIGHT, win32con.VK_DOWN,
+                                  win32con.VK_PRIOR, win32con.VK_NEXT, win32con.VK_END,
+                                  win32con.VK_HOME, win32con.VK_INSERT, win32con.VK_DELETE,
+                                  win32con.VK_DIVIDE, win32con.VK_NUMLOCK]
+    return (scan_code, is_extended)
+
+
+def create_lparam(virtual_key: int, repeat_count: int, transition_state: bool, previous_key_state: bool, context_code: bool) -> int:
+    scan_code = virtual_key_to_scan_code(virtual_key)
+    return (transition_state << 31) | (previous_key_state << 30) | (context_code << 29) | (scan_code[1] << 24) | (scan_code[0] << 16) | (repeat_count)
+
+
+def create_lparam_key_down(virtual_key: int, repeat_count: int = 1) -> int:
+    return create_lparam(virtual_key, repeat_count, False, repeat_count > 1, False)
+
+
+def create_lparam_key_up(virtual_key: int) -> int:
+    return create_lparam(virtual_key, 1, True, True, False)
+
+
+def send_keydown_to_hwnd(hwnd: int, virtual_key: int) -> None:
+    win32gui.PostMessage(hwnd, win32con.WM_KEYDOWN,
+                         virtual_key, create_lparam_key_down(virtual_key))
+
+
+def send_keyup_to_hwnd(hwnd: int, virtual_key: int) -> None:
+    win32gui.PostMessage(hwnd, win32con.WM_KEYUP, virtual_key,
+                         create_lparam_key_up(virtual_key))
+
+
+def send_key_to_hwnd(hwnd: int, virtual_key: int, press_time: float = 0) -> None:
+    send_keydown_to_hwnd(hwnd, virtual_key)
+    if press_time > 0:
+        time.sleep(press_time)
+    send_keyup_to_hwnd(hwnd, virtual_key)
 
 
 def set_hwnd_borderless(hwnd: int) -> None:
