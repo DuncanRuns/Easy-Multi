@@ -65,7 +65,7 @@ class Window:
         """
         Runs esc, shift-tab, enter twice on the window.
 
-        WARNING: Running when a different Minecraft is selected will result in a crash.
+        WARNING: Running when a different Minecraft is selected will result in a crash on this window.
         """
         hwnd_util.autoit_send_to_hwnd(
             self._hwnd, "{ESC}{SHIFTDOWN}{TAB}{SHIFTUP}{ENTER}{ESC}{SHIFTDOWN}{TAB}{SHIFTUP}{ENTER}")
@@ -74,7 +74,7 @@ class Window:
         """
         Runs f3+esc on the window.
 
-        WARNING: Running when a different Minecraft is selected will result in a crash.
+        WARNING: Running when a different Minecraft is selected will result in a crash on this window.
         """
         hwnd_util.autoit_send_to_hwnd(self._hwnd, "{F3 down}{ESC}{F3 up}")
 
