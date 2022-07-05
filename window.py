@@ -75,8 +75,8 @@ class Window:
         """
         Runs f3+esc on the window.
         """
-        hwnd_util.autoit_send_to_hwnd(self._hwnd, "{F3 down}{ESC}{F3 up}")
         hwnd_util.send_keydown_to_hwnd(self._hwnd, win32con.VK_F3)
+        hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_ESCAPE)
         hwnd_util.send_keyup_to_hwnd(self._hwnd, win32con.VK_F3)
 
     def exists(self) -> bool:
