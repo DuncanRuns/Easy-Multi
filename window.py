@@ -61,7 +61,7 @@ class Window:
         self._dir = hwnd_util.get_mc_dir(self._pid)
         return self._dir
 
-    def remote_reset_keys(self) -> None:
+    def press_reset_keys(self) -> None:
         """
         Runs esc, shift-tab, enter twice on the window.
         """
@@ -71,7 +71,7 @@ class Window:
         hwnd_util.send_keyup_to_hwnd(self._hwnd, win32con.VK_LSHIFT)
         hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_RETURN, 0)
 
-    def remote_f3_esc(self) -> None:
+    def press_f3_esc(self) -> None:
         """
         Runs f3+esc on the window.
         """
