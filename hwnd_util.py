@@ -62,12 +62,12 @@ def get_all_hwnds() -> List[int]:
     return hwnd_list
 
 
-def get_all_mc_hwnds(old_hwnds=[]) -> List[int]:
+def get_all_mc_hwnds() -> List[int]:
     hwnds = []
     mc_match = re.compile(
         r"^Minecraft\*? 1\.[1-9]\d*(\.[1-9]\d*)?( .*)?$").match
     for hwnd in get_all_hwnds():
-        if hwnd in old_hwnds or mc_match(get_hwnd_title(hwnd)):
+        if mc_match(get_hwnd_title(hwnd)):
             hwnds.append(hwnd)
     return hwnds
 
@@ -112,21 +112,29 @@ def create_lparam_key_up(virtual_key: int) -> int:
     return create_lparam(virtual_key, 1, True, True, False)
 
 
-def send_keydown_to_hwnd(hwnd: int, virtual_key: int) -> None:
-    win32gui.PostMessage(hwnd, win32con.WM_KEYDOWN,
-                         virtual_key, create_lparam_key_down(virtual_key))
+def send_keydown_to_hwnd(hwnd: int, virtual_key: int, use_post: bool = True) -> None:
+    if use_post:
+        win32gui.PostMessage(hwnd, win32con.WM_KEYDOWN,
+                             virtual_key, create_lparam_key_down(virtual_key))
+    else:
+        win32gui.SendMessage(hwnd, win32con.WM_KEYDOWN,
+                             virtual_key, create_lparam_key_down(virtual_key))
 
 
-def send_keyup_to_hwnd(hwnd: int, virtual_key: int) -> None:
-    win32gui.PostMessage(hwnd, win32con.WM_KEYUP, virtual_key,
-                         create_lparam_key_up(virtual_key))
+def send_keyup_to_hwnd(hwnd: int, virtual_key: int, use_post: bool = True) -> None:
+    if use_post:
+        win32gui.PostMessage(hwnd, win32con.WM_KEYUP,
+                             virtual_key, create_lparam_key_up(virtual_key))
+    else:
+        win32gui.SendMessage(hwnd, win32con.WM_KEYUP,
+                             virtual_key, create_lparam_key_up(virtual_key))
 
 
-def send_key_to_hwnd(hwnd: int, virtual_key: int, press_time: float = 0) -> None:
-    send_keydown_to_hwnd(hwnd, virtual_key)
+def send_key_to_hwnd(hwnd: int, virtual_key: int, press_time: float = 0, use_post: bool = True) -> None:
+    send_keydown_to_hwnd(hwnd, virtual_key, use_post)
     if press_time > 0:
         time.sleep(press_time)
-    send_keyup_to_hwnd(hwnd, virtual_key)
+    send_keyup_to_hwnd(hwnd, virtual_key, use_post)
 
 
 def set_hwnd_borderless(hwnd: int) -> None:

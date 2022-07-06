@@ -1,14 +1,17 @@
 # Object oriented abstraction layer on top of win_util
 
-from typing import List
-import hwnd_util, win32con
+from typing import List, Union
+import hwnd_util, win32con, threading
+
+_window_cache = []
+_retreive_lock = threading.Lock()
 
 
 class Window:
     def __init__(self, hwnd):
         self._hwnd: int = hwnd
         self._pid: int = hwnd_util.get_pid_from_hwnd(hwnd)
-        self._dir: str = 0
+        self._dir: str = None
         self._original_title: str = hwnd_util.get_hwnd_title(self._hwnd)
 
     def get_original_title(self) -> str:
@@ -56,7 +59,7 @@ class Window:
         return self._hwnd
 
     def get_mc_dir(self) -> str:
-        if self._dir != 0:
+        if self._dir is not None:
             return self._dir
         self._dir = hwnd_util.get_mc_dir(self._pid)
         return self._dir
@@ -65,11 +68,12 @@ class Window:
         """
         Runs esc, shift-tab, enter twice on the window.
         """
-        hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_ESCAPE)
-        hwnd_util.send_keydown_to_hwnd(self._hwnd, win32con.VK_LSHIFT)
-        hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_TAB)
-        hwnd_util.send_keyup_to_hwnd(self._hwnd, win32con.VK_LSHIFT)
-        hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_RETURN, 0)
+        for i in range(2):
+            hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_ESCAPE)
+            hwnd_util.send_keydown_to_hwnd(self._hwnd, win32con.VK_LSHIFT)
+            hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_TAB)
+            hwnd_util.send_keyup_to_hwnd(self._hwnd, win32con.VK_LSHIFT)
+            hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_RETURN, 0)
 
     def press_f3_esc(self) -> None:
         """
@@ -86,17 +90,31 @@ class Window:
         return self._hwnd == __o.get_hwnd()
 
 
-def get_all_mc_windows(old_windows=[]) -> List[Window]:
-    hwnds = hwnd_util.get_all_mc_hwnds([i.get_hwnd() for i in old_windows])
-    windows = []
-    for hwnd in hwnds:
-        window = Window(hwnd)
-        windows.append(window)
-    return windows
+def get_all_mc_windows() -> List[Window]:
+    with _retreive_lock:
+        global _window_cache
+        hwnds = hwnd_util.get_all_mc_hwnds()
+        windows = []
+        for hwnd in hwnds:
+            window = Window(hwnd)
+            if window in _window_cache:
+                window = _window_cache[_window_cache.index(window)]
+            windows.append(window)
+        _window_cache = windows.copy()
+        return windows
 
 
 def get_current_window() -> Window:
-    return Window(hwnd_util.get_current_hwnd())
+    with _retreive_lock:
+        window = Window(hwnd_util.get_current_hwnd())
+        if window in _window_cache:
+            window = _window_cache[_window_cache.index(window)]
+
+
+def get_window_by_dir(mc_dir: str) -> Union[None, Window]:
+    for window in get_all_mc_windows():
+        if window.get_mc_dir() == mc_dir:
+            return window
 
 
 if __name__ == "__main__":

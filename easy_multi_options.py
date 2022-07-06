@@ -22,3 +22,4 @@ class EasyMultiOptions(BasicOptions):
         # Hotkeys
         reset_hotkey = ["u"]
         hide_hotkey = ["p"]
+        bg_reset_hotkey = ["["]
