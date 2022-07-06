@@ -1,8 +1,11 @@
 # Abstraction layer on top of win32gui and win32process
 
-import re, win32con, win32process, subprocess, win32gui, os
+import re, win32con, win32process, subprocess, win32gui, os, screeninfo
 from typing import List, Union
 from win32com import client
+
+_monitor = screeninfo.get_monitors()[0]
+_monitor_size = (_monitor.width, _monitor.height)
 
 shell = client.Dispatch("WScript.Shell")
 
@@ -96,7 +99,7 @@ def set_hwnd_borderless(hwnd: int, window_size=(1920, 1080)) -> None:
     style &= ~(WS_BORDER | WS_DLGFRAME | WS_THICKFRAME |
                WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU)
     set_hwnd_style(hwnd, style)
-    win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, 0, 0,
+    win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, (_monitor_size[0] - window_size[0]) // 2, (_monitor_size[1] - window_size[1]) // 2,
                           window_size[0], window_size[1], win32con.SWP_SHOWWINDOW)
 
 
