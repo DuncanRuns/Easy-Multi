@@ -39,7 +39,7 @@ except:
     exit()
 
 
-VERSION = "1.5.1"
+VERSION = "1.5.2"
 
 
 def resource_path(relative_path):
@@ -663,20 +663,26 @@ class EasyMultiApp(tk.Tk):
 
         keyboard.press_and_release("esc")
 
-    def _reset_world(self, window_to_reset: Window):
+    def _reset_world(self, window_to_reset: Window) -> None:
         # Assumes window is active
-        pre_one_nine = False
+        version_major: int = 16
+        version_minor: int = 1
         try:
-            pre_one_nine = int(
-                window_to_reset.get_original_title().split(".")[1]) < 9
+            dot_split = window_to_reset.get_original_title().split(".")
+            version_major = int(dot_split[1])
+            version_minor = int(dot_split[2].split(" ")[0])
         except:
             pass
         keyboard.press_and_release("esc")
-        if pre_one_nine:
+        if version_major > 12:
+            keyboard.press_and_release("shift+tab")
+        elif version_major == 8 and version_minor == 9:
+            time.sleep(0.07)  # Uh oh magic number
+            for i in range(7):
+                keyboard.press_and_release("tab")
+        else:
             time.sleep(0.07)  # Uh oh magic number
             keyboard.press_and_release("tab")
-        else:
-            keyboard.press_and_release("shift+tab")
         keyboard.press_and_release("enter")
 
     def _hide_keypress(self) -> None:
