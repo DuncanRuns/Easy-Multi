@@ -52,8 +52,8 @@ class Window:
     def move(self, pos: List[int], window_size: List[int]) -> None:
         hwnd_util.move_hwnd(self._hwnd, *pos, *window_size)
 
-    def restore_window(self, offset=0):
-        hwnd_util.undo_hwnd_borderless(self._hwnd, offset)
+    def restore_window(self):
+        hwnd_util.undo_hwnd_borderless(self._hwnd)
 
     def get_hwnd(self) -> int:
         return self._hwnd

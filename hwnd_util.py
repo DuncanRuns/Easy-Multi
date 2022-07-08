@@ -4,7 +4,7 @@ import re, win32con, win32process, subprocess, win32api, win32gui, os, time
 from typing import List, Union, Tuple
 from win32com import client
 
-shell = client.Dispatch("WScript.Shell")
+#shell = client.Dispatch("WScript.Shell")
 
 # Borderless method thanks to Mr-Technician
 # https://github.com/Mr-Technician/BorderlessMinecraft/blob/master/BorderlessMinecraft/DLLInterop.cs
@@ -140,9 +140,8 @@ def is_hwnd_borderless(hwnd: int) -> bool:
     return new_style == old_style
 
 
-def undo_hwnd_borderless(hwnd, offset=0) -> None:
+def undo_hwnd_borderless(hwnd) -> None:
     set_hwnd_style(hwnd, 382664704)
-    move_hwnd(hwnd, 60 * offset, 60 * offset, 900, 520)
 
 
 def set_hwnd_title(hwnd: int, text: str) -> None:
@@ -150,8 +149,8 @@ def set_hwnd_title(hwnd: int, text: str) -> None:
 
 
 def activate_hwnd(hwnd: int) -> None:
-    global shell
-    shell.SendKeys('%')
+    #global shell
+    # shell.SendKeys('%')
     win32gui.ShowWindow(hwnd, 5)
     win32gui.SetForegroundWindow(hwnd)
 
