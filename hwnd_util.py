@@ -6,22 +6,8 @@ from win32com import client
 
 shell = client.Dispatch("WScript.Shell")
 
-# Constants and borderless method thanks to Mr-Technician
+# Borderless method thanks to Mr-Technician
 # https://github.com/Mr-Technician/BorderlessMinecraft/blob/master/BorderlessMinecraft/DLLInterop.cs
-
-SW_RESTORE = 0x09  # const for restoreWindow
-SW_MINIMIZE = 0x06
-
-# sets the necessary constants for setBorderless
-GWL_STYLE = -16
-WS_BORDER = 0x00800000
-WS_THICKFRAME = 0x00040000
-WS_MINIMIZEBOX = 0x00020000
-WS_MAXIMIZEBOX = 0x00010000
-WS_SYSMENU = 0x00800000
-WS_DLGFRAME = 0x00400000
-
-SWP_NOZORDER = 0x0004  # const for setPos
 
 # Custom Constants
 FULLSCREEN_STYLE = -1241513984
@@ -79,11 +65,11 @@ def get_hwnd_exists(hwnd: int) -> bool:
 
 
 def get_hwnd_style(hwnd: int) -> int:
-    return win32gui.GetWindowLong(hwnd, GWL_STYLE)
+    return win32gui.GetWindowLong(hwnd, win32con.GWL_STYLE)
 
 
 def set_hwnd_style(hwnd: int, style: int) -> None:
-    win32gui.SetWindowLong(hwnd, GWL_STYLE, style)
+    win32gui.SetWindowLong(hwnd, win32con.GWL_STYLE, style)
 
 # LPARAM STUFF
 # https://stackoverflow.com/questions/54638741/how-is-the-lparam-of-postmessage-constructed
@@ -139,8 +125,8 @@ def send_key_to_hwnd(hwnd: int, virtual_key: int, press_time: float = 0, use_pos
 
 def set_hwnd_borderless(hwnd: int) -> None:
     style = get_hwnd_style(hwnd)
-    style &= ~(WS_BORDER | WS_DLGFRAME | WS_THICKFRAME |
-               WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU)
+    style &= ~(win32con.WS_BORDER | win32con.WS_DLGFRAME | win32con.WS_THICKFRAME |
+               win32con.WS_MINIMIZEBOX | win32con.WS_MAXIMIZEBOX | win32con.WS_SYSMENU)
     set_hwnd_style(hwnd, style)
     # win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, pos[0], pos[1],
     #                      window_size[0], window_size[1], win32con.SWP_SHOWWINDOW)
@@ -149,8 +135,8 @@ def set_hwnd_borderless(hwnd: int) -> None:
 def is_hwnd_borderless(hwnd: int) -> bool:
     old_style = get_hwnd_style(hwnd)
     new_style = old_style
-    new_style &= ~(WS_BORDER | WS_DLGFRAME | WS_THICKFRAME |
-                   WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU)
+    new_style &= ~(win32con.WS_BORDER | win32con.WS_DLGFRAME | win32con.WS_THICKFRAME |
+                   win32con.WS_MINIMIZEBOX | win32con.WS_MAXIMIZEBOX | win32con.WS_SYSMENU)
     return new_style == old_style
 
 
