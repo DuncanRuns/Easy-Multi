@@ -206,13 +206,16 @@ def get_mc_dir(pid: int) -> Union[str, None]:
     # Thanks to the creator of MoveWorlds-v0.3.ahk (probably specnr)
     cmd = f"powershell.exe \"$proc = Get-WmiObject Win32_Process -Filter \\\"ProcessId = {str(pid)}\\\";$proc.CommandLine\""
     p = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE)
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     response = p.communicate()[0].decode()
     if "--gameDir" in response:
         ind = response.index("--gameDir") + 10
         return take_arg(response, ind).replace("\\", "/")
-    elif "\"-Djava.library.path=" in response:
-        ind = response.index("\"-Djava.library.path=")
+    elif "Djava.library.path" in response:
+        if '"-Djava.library.path' in response:
+            ind = response.index('"-Djava.library.path')
+        else:
+            ind = response.index('-Djava.library.path')
         natives_path = take_arg(response, ind)[20:].replace("\\", "/")
         return os.path.join(os.path.split(natives_path)[0], ".minecraft").replace("\\", "/")
 
