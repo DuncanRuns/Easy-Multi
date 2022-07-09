@@ -1,7 +1,7 @@
 # Object oriented abstraction layer on top of win_util
 
-from typing import List, Union
 import hwnd_util, win32con, threading
+from typing import List, Union
 
 _window_cache = []
 _retreive_lock = threading.Lock()
