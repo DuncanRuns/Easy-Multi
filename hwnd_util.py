@@ -2,9 +2,9 @@
 
 import re, win32con, win32process, subprocess, win32api, win32gui, os, time
 from typing import List, Union, Tuple
-#from win32com import client
+from win32com import client
 
-#shell = client.Dispatch("WScript.Shell")
+shell = client.Dispatch("WScript.Shell")
 
 # Borderless method thanks to Mr-Technician
 # https://github.com/Mr-Technician/BorderlessMinecraft/blob/master/BorderlessMinecraft/DLLInterop.cs
@@ -149,8 +149,8 @@ def set_hwnd_title(hwnd: int, text: str) -> None:
 
 
 def activate_hwnd(hwnd: int) -> None:
-    #global shell
-    # shell.SendKeys('%')
+    global shell
+    shell.SendKeys('%')
     win32gui.ShowWindow(hwnd, 5)
     win32gui.SetForegroundWindow(hwnd)
 
