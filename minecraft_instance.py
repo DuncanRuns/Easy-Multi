@@ -1,5 +1,5 @@
 import os, re, key_util, clear_util, threading
-from window import Window, get_all_mc_windows
+from window import Window, get_all_mc_windows, get_window_by_dir
 from typing import Union, List
 
 _match_view_start = re.compile(
@@ -18,6 +18,8 @@ class MinecraftInstance:
         elif window:
             self._window = window
             self._game_dir = window.get_mc_dir()
+        else:
+            raise  # NO GAME DIRECTORY OR WINDOW GIVEN
 
         self._pause_on_wp: bool = False
         self._pause_on_load: bool = False
@@ -57,6 +59,9 @@ class MinecraftInstance:
 
     def reset(self, pause_on_load: bool = True, use_f3: bool = True, clear_worlds: bool = True) -> None:
         with self._reset_lock:
+            if self._window is None:
+                print("NO WINDOW AVAILABLE TO RESET")
+                return
             self.get_next_log_lines()
             if not self._loaded_world:
                 if self._get_leave_preview_key() is not None:
@@ -76,7 +81,8 @@ class MinecraftInstance:
 
     def activate(self) -> None:
         self.cancel_plans()
-        self._window.activate()
+        if self._window is not None and self._window.exists():
+            self._window.activate()
 
     def cancel_plans(self) -> None:
         self._loaded_preview = True
@@ -87,26 +93,36 @@ class MinecraftInstance:
             # Cancel tick if already being ran
             return
         with self._tick_lock:
-            if (not self._loaded_preview) or (self._pause_on_load and not self._loaded_world):
-                new_log_lines = self.get_next_log_lines()
-                if not self._loaded_preview:
-                    for line in new_log_lines:
-                        if _match_view_start(line):
-                            self._loaded_preview = True
-                            self._loaded_world = False
-                            if self._use_f3:
-                                self._window.press_f3_esc()
-                            break
-                if not self._loaded_world:
-                    for line in new_log_lines:
-                        if _match_world_load(line):
-                            self._loaded_world = True
-                            if self._pause_on_load:
-                                if self._use_f3:
-                                    self._window.press_f3_esc()
-                                else:
-                                    self._window.press_esc()
-                            break
+            # Window replacer
+            if self._window is None:
+                self._window = get_window_by_dir(self._game_dir)
+                self._log_progress = 0
+            elif not self._window.exists():
+                self._window = None
+            # Log Reader
+            elif (not self._loaded_preview) or (self._pause_on_load and not self._loaded_world):
+                self._process_log()
+
+    def _process_log(self) -> None:
+        new_log_lines = self.get_next_log_lines()
+        if not self._loaded_preview:
+            for line in new_log_lines:
+                if _match_view_start(line):
+                    self._loaded_preview = True
+                    self._loaded_world = False
+                    if self._use_f3:
+                        self._window.press_f3_esc()
+                    break
+        if not self._loaded_world:
+            for line in new_log_lines:
+                if _match_world_load(line):
+                    self._loaded_world = True
+                    if self._pause_on_load:
+                        if self._use_f3:
+                            self._window.press_f3_esc()
+                        else:
+                            self._window.press_esc()
+                    break
 
     def get_next_log_lines(self) -> List[str]:
         with self._log_lock:
