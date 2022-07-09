@@ -10,6 +10,8 @@ _match_world_load = re.compile(
 
 class MinecraftInstance:
     def __init__(self, game_dir: str = None, window: Window = None) -> None:
+        if self._window.is_fullscreen():
+            self._window.press_f11()
         self._window: Window
         self._game_dir: str
         if game_dir:

@@ -64,6 +64,9 @@ class Window:
         self._dir = hwnd_util.get_mc_dir(self._pid)
         return self._dir
 
+    def press_f11(self) -> None:
+        hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_F11)
+
     def press_reset_keys(self, attempts=2, use_post=True) -> None:
         """
         Runs esc, shift-tab, enter twice on the window.
