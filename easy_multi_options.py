@@ -10,10 +10,6 @@ class EasyMultiOptions(BasicOptions):
 
         # World Deletion
         auto_clear_worlds = True
-        clear_new_world = True
-        clear_random_speedrun = True
-        clear_set_speedrun = True
-        clear_speedrun = True
 
         # Instance Hiding
         auto_hide = False
