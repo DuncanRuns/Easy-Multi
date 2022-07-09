@@ -1,5 +1,5 @@
+import os, re, key_util, clear_util, threading
 from window import Window, get_all_mc_windows
-import os, re, key_util, clear_util
 from typing import Union, List
 
 _match_view_start = re.compile(
@@ -29,6 +29,11 @@ class MinecraftInstance:
         self._leave_preview_key = None
         self._leave_preview_key: int = self._get_leave_preview_key()
 
+        self._tick_lock = threading.Lock()
+        self._reset_lock = threading.Lock()
+        self._log_lock = threading.Lock()
+        self._clear_lock = threading.Lock()
+
         with open(self.get_log_path(), "rb") as f:
             self._log_progress = len(f.read())
 
@@ -51,22 +56,23 @@ class MinecraftInstance:
         return None
 
     def reset(self, pause_on_load: bool = True, use_f3: bool = True, clear_worlds: bool = True) -> None:
-        self.get_next_log_lines()
-        if not self._loaded_world:
-            if self._get_leave_preview_key() is not None:
-                self._window.press_key(self._get_leave_preview_key())
-            else:
-                print("NO PREVIEW KEY SET IN OPTIONS")
-        self._window.press_reset_keys()
+        with self._reset_lock:
+            self.get_next_log_lines()
+            if not self._loaded_world:
+                if self._get_leave_preview_key() is not None:
+                    self._window.press_key(self._get_leave_preview_key())
+                else:
+                    print("NO PREVIEW KEY SET IN OPTIONS")
+            self._window.press_reset_keys()
 
-        self._pause_on_load = pause_on_load
-        self._use_f3 = use_f3
+            self._pause_on_load = pause_on_load
+            self._use_f3 = use_f3
 
-        self._loaded_preview = False
-        self._loaded_world = False
+            self._loaded_preview = False
+            self._loaded_world = False
 
-        if clear_worlds:
-            self.clear_worlds()
+            if clear_worlds:
+                self.clear_worlds()
 
     def activate(self) -> None:
         self.cancel_plans()
@@ -77,39 +83,44 @@ class MinecraftInstance:
         self._loaded_world = True
 
     def tick(self) -> None:
-        if (not self._loaded_preview) or (self._pause_on_load and not self._loaded_world):
-            new_log_lines = self.get_next_log_lines()
-            if not self._loaded_preview:
-                for line in new_log_lines:
-                    if _match_view_start(line):
-                        self._loaded_preview = True
-                        self._loaded_world = False
-                        if self._use_f3:
-                            self._window.press_f3_esc()
-                        break
-            if not self._loaded_world:
-                for line in new_log_lines:
-                    if _match_world_load(line):
-                        self._loaded_world = True
-                        if self._pause_on_load:
+        if self._tick_lock.locked():
+            # Cancel tick if already being ran
+            return
+        with self._tick_lock:
+            if (not self._loaded_preview) or (self._pause_on_load and not self._loaded_world):
+                new_log_lines = self.get_next_log_lines()
+                if not self._loaded_preview:
+                    for line in new_log_lines:
+                        if _match_view_start(line):
+                            self._loaded_preview = True
+                            self._loaded_world = False
                             if self._use_f3:
                                 self._window.press_f3_esc()
-                            else:
-                                self._window.press_esc()
-                        break
+                            break
+                if not self._loaded_world:
+                    for line in new_log_lines:
+                        if _match_world_load(line):
+                            self._loaded_world = True
+                            if self._pause_on_load:
+                                if self._use_f3:
+                                    self._window.press_f3_esc()
+                                else:
+                                    self._window.press_esc()
+                            break
 
     def get_next_log_lines(self) -> List[str]:
-        line_list = []
-        with open(self.get_log_path(), "rb") as f:
-            f.seek(self._log_progress, 0)
-            f_rbytes = f.read()
-            self._log_progress += len(f_rbytes)
-        f_text = f_rbytes.decode()
-        for line in f_text.splitlines():
-            line_list.append(line.rstrip())
-        while "" in line_list:
-            line_list.remove("")
-        return line_list
+        with self._log_lock:
+            line_list = []
+            with open(self.get_log_path(), "rb") as f:
+                f.seek(self._log_progress, 0)
+                f_rbytes = f.read()
+                self._log_progress += len(f_rbytes)
+            f_text = f_rbytes.decode()
+            for line in f_text.splitlines():
+                line_list.append(line.rstrip())
+            while "" in line_list:
+                line_list.remove("")
+            return line_list
 
     def get_log_path(self) -> str:
         return os.path.join(self._game_dir, "logs", "latest.log")
@@ -118,7 +129,12 @@ class MinecraftInstance:
         return self._game_dir
 
     def clear_worlds(self) -> int:
-        return clear_util.delete_all_in_minecraft(self._game_dir, 6)
+        with self._clear_lock:
+            try:
+                i = clear_util.delete_all_in_minecraft(self._game_dir, 6)
+            except:
+                i = -1
+        return i
 
     def get_window(self) -> Window:
         return self._window
