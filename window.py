@@ -64,16 +64,28 @@ class Window:
         self._dir = hwnd_util.get_mc_dir(self._pid)
         return self._dir
 
-    def press_reset_keys(self) -> None:
+    def press_reset_keys(self, attempts=2, use_post=True) -> None:
         """
         Runs esc, shift-tab, enter twice on the window.
         """
-        for i in range(2):
-            hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_ESCAPE)
-            hwnd_util.send_keydown_to_hwnd(self._hwnd, win32con.VK_LSHIFT)
-            hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_TAB)
-            hwnd_util.send_keyup_to_hwnd(self._hwnd, win32con.VK_LSHIFT)
-            hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_RETURN, 0)
+        # TODO: Support pre 1.14
+        for i in range(attempts):
+            hwnd_util.send_key_to_hwnd(
+                self._hwnd, win32con.VK_ESCAPE, use_post=use_post)
+            hwnd_util.send_keydown_to_hwnd(
+                self._hwnd, win32con.VK_LSHIFT, use_post=use_post)
+            hwnd_util.send_key_to_hwnd(
+                self._hwnd, win32con.VK_TAB, use_post=use_post)
+            hwnd_util.send_keyup_to_hwnd(
+                self._hwnd, win32con.VK_LSHIFT, use_post=use_post)
+            hwnd_util.send_key_to_hwnd(
+                self._hwnd, win32con.VK_RETURN, use_post=use_post)
+
+    def press_esc(self) -> None:
+        """
+        Runs esc on the window.
+        """
+        hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_ESCAPE)
 
     def press_f3_esc(self) -> None:
         """
@@ -82,6 +94,9 @@ class Window:
         hwnd_util.send_keydown_to_hwnd(self._hwnd, win32con.VK_F3)
         hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_ESCAPE)
         hwnd_util.send_keyup_to_hwnd(self._hwnd, win32con.VK_F3)
+
+    def press_key(self, virtual_key: int) -> None:
+        hwnd_util.send_key_to_hwnd(self._hwnd, virtual_key)
 
     def exists(self) -> bool:
         return hwnd_util.get_hwnd_exists(self._hwnd)
