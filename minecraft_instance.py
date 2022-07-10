@@ -10,8 +10,6 @@ _match_world_load = re.compile(
 
 class MinecraftInstance:
     def __init__(self, game_dir: str = None, window: Window = None) -> None:
-        if self._window.is_fullscreen():
-            self._window.press_f11()
         self._window: Window
         self._game_dir: str
         if game_dir:
@@ -61,9 +59,11 @@ class MinecraftInstance:
 
     def reset(self, pause_on_load: bool = True, use_f3: bool = True, clear_worlds: bool = True) -> None:
         with self._reset_lock:
-            if self._window is None:
+            if self._window is None or not self._window.exists():
                 print("NO WINDOW AVAILABLE TO RESET")
                 return
+            if self._window.is_fullscreen():
+                self._window.press_f11()
             self.get_next_log_lines()
             if not self._loaded_world:
                 if self._get_leave_preview_key() is not None:
@@ -81,10 +81,14 @@ class MinecraftInstance:
             if clear_worlds:
                 self.clear_worlds()
 
-    def activate(self) -> None:
+    def activate(self, use_fullscreen: bool = False) -> None:
         self.cancel_plans()
         if self._window is not None and self._window.exists():
             self._window.activate()
+        if use_fullscreen and not self._window.is_fullscreen():
+            self._window.press_f11()
+        elif not use_fullscreen and self._window.is_fullscreen():
+            self._window.press_f11()
 
     def cancel_plans(self) -> None:
         self._loaded_preview = True
