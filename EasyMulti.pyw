@@ -5,12 +5,16 @@
 import tkinter.messagebox as tkMessageBox
 import traceback
 from easy_multi_gui import *
+from easy_multi_options import EasyMultiOptions, get_location
 
 
 def main():
     try:
-        ema = EasyMultiGUI()
+        opt_path = get_location()
+        options = EasyMultiOptions().try_load_file(opt_path)
+        ema = EasyMultiGUI(options)
         ema.mainloop()
+        options.save_file(opt_path)
         clear_and_stop_hotkey_checker()
     except:
         error = traceback.format_exc()
