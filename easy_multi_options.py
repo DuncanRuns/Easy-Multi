@@ -3,7 +3,6 @@ from basic_options import BasicOptions
 
 class EasyMultiOptions(BasicOptions):
     def set_defaults(self) -> None:
-
         use_wall = False
         use_fullscreen = False
         monitor_size = [1920, 1080]
