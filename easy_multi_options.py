@@ -1,20 +1,33 @@
+import shutil
 from basic_options import BasicOptions
+import os
 
 
 class EasyMultiOptions(BasicOptions):
     def set_defaults(self) -> None:
-        use_wall = False
-        use_fullscreen = False
-        monitor_size = [1920, 1080]
+        self.use_wall = False
+        self.use_fullscreen = False
+        self.monitor_size = [1920, 1080]
 
         # World Deletion
-        auto_clear_worlds = True
+        self.auto_clear_worlds = True
 
         # Instance Hiding
-        auto_hide = False
-        auto_hide_time = 5
+        self.auto_hide = False
+        self.auto_hide_time = 5
 
         # Hotkeys
-        reset_hotkey = ["u"]
-        hide_hotkey = ["p"]
-        bg_reset_hotkey = ["["]
+        self.reset_hotkey = ["u"]
+        self.hide_hotkey = ["p"]
+        self.bg_reset_hotkey = ["["]
+
+
+def get_or_create_folder() -> str:
+    fol = os.path.join(os.path.expanduser("~"), ".EasyMulti")
+    if not os.path.isdir(fol):
+        os.mkdir(fol)
+    return fol
+
+
+def get_location() -> str:
+    return os.path.join(get_or_create_folder(), "options.json")
