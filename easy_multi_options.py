@@ -31,3 +31,8 @@ def get_or_create_folder() -> str:
 
 def get_location() -> str:
     return os.path.join(get_or_create_folder(), "options.json")
+
+
+if __name__ == "__main__":
+    import os
+    os.system("python EasyMulti.pyw")

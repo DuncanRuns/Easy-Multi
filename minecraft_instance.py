@@ -1,4 +1,4 @@
-import os, re, key_util, clear_util, threading
+import os, re, input_util, clear_util, threading
 from window import Window, get_all_mc_windows, get_window_by_dir
 from typing import Union, List
 
@@ -49,7 +49,7 @@ class MinecraftInstance:
                     args = line.split(":")
                     if args[0] == "key_Leave Preview":
                         args = args[1].split(".")
-                        self._leave_preview_key = key_util.vk_key_names[
+                        self._leave_preview_key = input_util.vk_key_names[
                             args[2].lower().rstrip()]
                         break
             return self._leave_preview_key
