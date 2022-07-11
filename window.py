@@ -3,7 +3,7 @@
 import hwnd_util, win32con, threading
 from typing import List, Union
 
-_window_cache = []
+_mc_window_cache = []
 _retreive_lock = threading.Lock()
 
 
@@ -28,6 +28,9 @@ class Window:
 
     def activate(self) -> None:
         hwnd_util.activate_hwnd(self._hwnd)
+
+    def is_active(self) -> bool:
+        return self._hwnd == hwnd_util.get_current_hwnd()
 
     def tiny(self) -> bool:
         if self.is_borderless():
@@ -110,23 +113,25 @@ class Window:
 
 def get_all_mc_windows() -> List[Window]:
     with _retreive_lock:
-        global _window_cache
+        global _mc_window_cache
         hwnds = hwnd_util.get_all_mc_hwnds()
         windows = []
         for hwnd in hwnds:
             window = Window(hwnd)
-            if window in _window_cache:
-                window = _window_cache[_window_cache.index(window)]
+            if window in _mc_window_cache:
+                window = _mc_window_cache[_mc_window_cache.index(window)]
             windows.append(window)
-        _window_cache = windows.copy()
+        _mc_window_cache = windows.copy()
         return windows
 
 
 def get_current_window() -> Window:
     with _retreive_lock:
+        global _mc_window_cache
         window = Window(hwnd_util.get_current_hwnd())
-        if window in _window_cache:
-            window = _window_cache[_window_cache.index(window)]
+        if window in _mc_window_cache:
+            window = _mc_window_cache[_mc_window_cache.index(window)]
+    return window
 
 
 def get_window_by_dir(mc_dir: str) -> Union[None, Window]:
