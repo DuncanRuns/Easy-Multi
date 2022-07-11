@@ -49,14 +49,14 @@ class MinecraftInstance:
                     args = line.split(":")
                     if args[0] == "key_Leave Preview":
                         self._leave_preview_key = input_util.get_vk_from_minecraft(
-                            args[1])
+                            args[1].rstrip())
                         break
             return self._leave_preview_key
         except:
             pass
         return None
 
-    def reset(self, pause_on_load: bool = True, use_f3: bool = True, clear_worlds: bool = True) -> None:
+    def reset(self, pause_on_load: bool = True, use_f3: bool = True, clear_worlds: bool = True, window_pos=(0, 0), window_size=(1920, 1080)) -> None:
         with self._reset_lock:
             if self._window is None or not self._window.exists():
                 print("NO WINDOW AVAILABLE TO RESET")
@@ -80,14 +80,18 @@ class MinecraftInstance:
             if clear_worlds:
                 self.clear_worlds()
 
+            self._window.go_borderless()
+            self._window.move(window_pos, window_size)
+
     def activate(self, use_fullscreen: bool = False) -> None:
-        self.cancel_plans()
-        if self._window is not None and self._window.exists():
-            self._window.activate()
-        if use_fullscreen and not self._window.is_fullscreen():
-            self._window.press_f11()
-        elif not use_fullscreen and self._window.is_fullscreen():
-            self._window.press_f11()
+        with self._reset_lock:
+            self.cancel_plans()
+            if self._window is not None and self._window.exists():
+                self._window.activate()
+            if use_fullscreen and not self._window.is_fullscreen():
+                self._window.press_f11()
+            elif not use_fullscreen and self._window.is_fullscreen():
+                self._window.press_f11()
 
     def cancel_plans(self) -> None:
         self._loaded_preview = True
