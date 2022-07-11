@@ -7,13 +7,16 @@ import traceback
 from easy_multi_gui import *
 from easy_multi_options import EasyMultiOptions, get_location
 from logger import Logger
+from input_util import clear_and_stop_hotkey_checker
 
 
 def main():
     try:
         opt_path = get_location()
         options = EasyMultiOptions().try_load_file(opt_path)
-        ema = EasyMultiGUI(options, Logger())
+        logger = Logger()
+        logger.add_callback(print)
+        ema = EasyMultiGUI(options, logger)
         ema.mainloop()
         options.save_file(opt_path)
         clear_and_stop_hotkey_checker()
