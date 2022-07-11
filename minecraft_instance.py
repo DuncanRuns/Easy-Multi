@@ -68,11 +68,6 @@ class MinecraftInstance:
                 print("NO WINDOW AVAILABLE TO RESET")
                 return
 
-            if self._window.is_fullscreen() and not single_instance:
-                self._window.press_f11()
-            elif not self._window.is_fullscreen() and single_instance:
-                self._window.press_f11()
-
             if not self._loaded_world:
                 if self._get_leave_preview_key() is not None:
                     self._window.press_key(self._get_leave_preview_key())
@@ -88,7 +83,12 @@ class MinecraftInstance:
             self._loaded_world = False
 
             if clear_worlds:
-                self.clear_worlds()
+                threading.Thread(target=self.clear_worlds).start()
+
+            if self._window.is_fullscreen() and not single_instance:
+                self._window.press_f11()
+            elif not self._window.is_fullscreen() and single_instance:
+                self._window.press_f11()
 
     def activate(self, use_fullscreen: bool = False) -> None:
         with self._reset_lock:
@@ -197,7 +197,7 @@ def _get_instance_total(instance: MinecraftInstance):
 
 
 def sort_instances_list(instances: List[MinecraftInstance]) -> None:
-    instances.sort(_get_instance_total)
+    instances.sort(key=_get_instance_total)
 
 
 def get_all_mc_instances() -> List[MinecraftInstance]:
