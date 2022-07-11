@@ -1,16 +1,20 @@
 import threading
+from logger import Logger
 from minecraft_instance import MinecraftInstance, get_all_mc_instances
 from easy_multi_options import EasyMultiOptions
 from input_util import *
 
 
 class EasyMulti:
-    def __init__(self, options: EasyMultiOptions) -> None:
+    def __init__(self, options: EasyMultiOptions, logger: Logger) -> None:
         self._tick_lock = threading.Lock()
-        self._setup_instances()
+        self._mc_instances: List[MinecraftInstance] = []
+
+        self._options = options
+        self._logger = logger
 
     def _setup_instances(self) -> None:
-        self.mc_instances = get_all_mc_instances()
+        self._mc_instances = get_all_mc_instances()
 
     def tick(self) -> None:
         if self._tick_lock.locked():
