@@ -196,17 +196,22 @@ def _get_instance_total(instance: MinecraftInstance):
     return total
 
 
+def sort_instances_list(instances: List[MinecraftInstance]) -> None:
+    instances.sort(_get_instance_total)
+
+
 def get_all_mc_instances() -> List[MinecraftInstance]:
     with _retreive_lock:
         global _mc_instance_cache
         windows = get_all_mc_windows()
         instances = []
         for window in windows:
-            instance = MinecraftInstance(window=window)
+            instance = MinecraftInstance(window.get_mc_dir(), window)
             if instance in _mc_instance_cache:
                 instance = _mc_instance_cache[
                     _mc_instance_cache.index(instance)]
             instances.append(instance)
+        sort_instances_list(instances)
         _mc_instance_cache = instances.copy()
         return instances
 
@@ -222,4 +227,4 @@ def get_current_mc_instance() -> Union[MinecraftInstance, None]:
 
 if __name__ == "__main__":
     import os
-    os.system("python test.py")
+    os.system("python EasyMulti.pyw")
