@@ -84,7 +84,7 @@ class MinecraftInstance:
             self._pause_on_load = pause_on_load and not single_instance
             self._use_f3 = use_f3
 
-            self._loaded_preview = False
+            self._loaded_preview = self._window.get_mc_version()[1] < 14
             self._loaded_world = False
 
             if clear_worlds:

@@ -1,5 +1,6 @@
 # Object oriented abstraction layer on top of win_util
 
+import time
 import hwnd_util, win32con, threading
 from typing import List, Tuple, Union
 
@@ -84,16 +85,28 @@ class Window:
         """
         Runs esc, shift-tab, enter twice on the window.
         """
-        # TODO: Support pre 1.14
+        v = self.get_mc_version()
+        version_major = v[1]
+        version_minor = v[2]
         for i in range(attempts):
             hwnd_util.send_key_to_hwnd(
                 self._hwnd, win32con.VK_ESCAPE, use_post=use_post)
-            hwnd_util.send_keydown_to_hwnd(
-                self._hwnd, win32con.VK_LSHIFT, use_post=use_post)
-            hwnd_util.send_key_to_hwnd(
-                self._hwnd, win32con.VK_TAB, use_post=use_post)
-            hwnd_util.send_keyup_to_hwnd(
-                self._hwnd, win32con.VK_LSHIFT, use_post=use_post)
+            if version_major > 12:
+                hwnd_util.send_keydown_to_hwnd(
+                    self._hwnd, win32con.VK_LSHIFT, use_post=use_post)
+                hwnd_util.send_key_to_hwnd(
+                    self._hwnd, win32con.VK_TAB, use_post=use_post)
+                hwnd_util.send_keyup_to_hwnd(
+                    self._hwnd, win32con.VK_LSHIFT, use_post=use_post)
+            elif version_major == 8 and version_minor == 9:
+                time.sleep(0.07)  # Uh oh magic number
+                for i in range(7):  # Run 7 times for anchiale
+                    hwnd_util.send_key_to_hwnd(
+                        self._hwnd, win32con.VK_TAB, use_post=use_post)
+            else:
+                time.sleep(0.07)  # Uh oh magic number
+                hwnd_util.send_key_to_hwnd(
+                    self._hwnd, win32con.VK_TAB, use_post=use_post)
             hwnd_util.send_key_to_hwnd(
                 self._hwnd, win32con.VK_RETURN, use_post=use_post)
 
