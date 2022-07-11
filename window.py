@@ -1,7 +1,7 @@
 # Object oriented abstraction layer on top of win_util
 
 import hwnd_util, win32con, threading
-from typing import List, Union
+from typing import List, Tuple, Union
 
 _mc_window_cache = []
 _retreive_lock = threading.Lock()
@@ -19,6 +19,16 @@ class Window:
 
     def revert_title(self) -> None:
         self.set_title(self._original_title)
+
+    def get_mc_version(self) -> Union[Tuple[int, int, int], None]:
+        try:
+            vstr = self._original_title.split()[1]
+            v = vstr.split(".")
+            if len(v) == 2:
+                v.append("0")
+            return (int(v[0]), int(v[1]), int(v[2]))
+        except:
+            return None
 
     def set_title(self, title: str) -> None:
         hwnd_util.set_hwnd_title(self._hwnd, title)
