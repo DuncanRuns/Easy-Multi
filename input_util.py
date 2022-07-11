@@ -1,7 +1,7 @@
 # Abstraction layer on top of win32api and uses some stuff from global_hotkeys
 
-import time, global_hotkeys, ctypes, win32api
-from typing import Callable, List
+import time, global_hotkeys, ctypes, win32api, mc_input_constants
+from typing import Callable, List, Union
 from global_hotkeys.keycodes import vk_key_names
 
 _user32 = ctypes.WinDLL('user32', use_last_error=True)
@@ -94,6 +94,14 @@ def are_any_keys_pressed(key_names: List[str]) -> bool:
         if is_pressed(key_name):
             return True
     return False
+
+
+def get_vk_from_minecraft(minecraft_key: str) -> Union[None, int]:
+    glfw_key = mc_input_constants.TRANSLATIONS_TO_GLFW[minecraft_key]
+    vk_key = mc_input_constants.get_vk_from_glfw(glfw_key)
+    if vk_key > 0:
+        return vk_key
+    return None
 
 
 def clear_and_stop_hotkey_checker() -> None:

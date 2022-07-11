@@ -48,9 +48,8 @@ class MinecraftInstance:
                 for line in f:
                     args = line.split(":")
                     if args[0] == "key_Leave Preview":
-                        args = args[1].split(".")
-                        self._leave_preview_key = input_util.vk_key_names[
-                            args[2].lower().rstrip()]
+                        self._leave_preview_key = input_util.get_vk_from_minecraft(
+                            args[1])
                         break
             return self._leave_preview_key
         except:
