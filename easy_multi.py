@@ -15,6 +15,8 @@ class EasyMulti:
         self._options = options
         self._logger = logger
 
+        self.log("Initialized")
+
     def log(self, line: str) -> None:
         self._logger.log(line, "EasyMulti")
 

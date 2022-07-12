@@ -18,21 +18,29 @@ def resource_path(relative_path):
 class EasyMultiGUI(ttkthemes.ThemedTk):
     def __init__(self, options: EasyMultiOptions, logger: Logger) -> None:
         ttkthemes.ThemedTk.__init__(self, theme="breeze")
-        self.easy_multi = EasyMulti(options, logger)
-        self.title("Easy Multi v" + VERSION)
-        self.resizable(0, 0)
-        self.iconbitmap(resource_path("EasyMulti.ico"))
 
         self._options = options
         self._logger = logger
 
         self._logger.add_callback(self._on_log)
         self._log_var = tk.StringVar(self, value=" \n " * 9)
-        self.log("Welcome to Easy Multi v" + VERSION)
 
+        self.log("Setting up window...")
+        self.title("Easy Multi v" + VERSION)
+        self.resizable(0, 0)
+        self.iconbitmap(resource_path("EasyMulti.ico"))
+
+        self.log("Initializing EasyMulti...")
+        self.easy_multi = EasyMulti(options, logger)
+
+        self.log("Creating widgets...")
         self._main_frame = ttk.Frame(self)
         self._main_frame.pack()
         self._init_widgets()
+
+        self.log("")
+        self.log("Welcome to Easy Multi v" + VERSION)
+        self.after(50, self._loop)
 
     def _loop(self) -> None:
         threading.Thread(target=self.easy_multi.tick).start()

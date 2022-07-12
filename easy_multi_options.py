@@ -7,7 +7,8 @@ class EasyMultiOptions(BasicOptions):
     def set_defaults(self) -> None:
         self.use_wall = False
         self.use_fullscreen = False
-        self.monitor_size = [1920, 1080]
+        self.screen_location = [0, 0]
+        self.screen_size = [1920, 1080]
 
         # World Deletion
         self.auto_clear_worlds = True
