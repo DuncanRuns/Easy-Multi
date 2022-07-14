@@ -1,4 +1,5 @@
 import os, re, input_util, clear_util, threading, time
+from logger import Logger, PrintLogger
 from window import Window, get_all_mc_windows, get_current_window, get_window_by_dir
 from typing import Tuple, Union, List
 
@@ -11,7 +12,7 @@ _retreive_lock = threading.Lock()
 
 
 class MinecraftInstance:
-    def __init__(self, game_dir: str = None, window: Window = None) -> None:
+    def __init__(self, game_dir: str = None, window: Window = None, logger: Logger = None) -> None:
         self._window: Window
         self._game_dir: str
         if game_dir:
@@ -23,6 +24,12 @@ class MinecraftInstance:
         else:
             raise  # NO GAME DIRECTORY OR WINDOW GIVEN
 
+        if not logger:
+            logger = PrintLogger()
+        self._logger = logger
+        self._log_name = self._game_dir.split(
+        )[1].replace("\\", "/").strip("/")
+
         self._pause_on_wp: bool = False
         self._pause_on_load: bool = False
         self._use_f3: bool = False
@@ -30,7 +37,7 @@ class MinecraftInstance:
         self._loaded_preview: bool = True
         self._loaded_world: bool = True
 
-        self._leave_preview_key = None
+        self._create_world_key = None
 
         self._tick_lock = threading.Lock()
         self._reset_lock = threading.Lock()
@@ -44,19 +51,22 @@ class MinecraftInstance:
             with open(self.get_log_path(), "rb") as f:
                 self._log_progress = len(f.read())
 
-    def _get_leave_preview_key(self) -> Union[int, None]:
-        if self._leave_preview_key is not None:
-            return self._leave_preview_key
+    def log(self, line: str) -> None:
+        self._logger.log(line, self._log_name)
+
+    def _get_create_world_key(self) -> Union[int, None]:
+        if self._create_world_key is not None:
+            return self._create_world_key
         options_path = os.path.join(self._game_dir, "options.txt")
         try:
             with open(options_path) as f:
                 for line in f:
                     args = line.split(":")
-                    if args[0] == "key_Leave Preview":
-                        self._leave_preview_key = input_util.get_vk_from_minecraft(
+                    if args[0] == "key_Create New World":
+                        self._create_world_key = input_util.get_vk_from_minecraft(
                             args[1].rstrip())
                         break
-            return self._leave_preview_key
+            return self._create_world_key
         except:
             pass
         return None
@@ -65,16 +75,13 @@ class MinecraftInstance:
         with self._reset_lock:
             self.get_next_log_lines()
             if self._window is None or not self._window.exists():
-                print("NO WINDOW AVAILABLE TO RESET")
+                self.log("No window opened yet...")
                 return
 
-            if not self._loaded_world:
-                if self._get_leave_preview_key() is not None:
-                    self._window.press_key(self._get_leave_preview_key())
-                else:
-                    print("NO PREVIEW KEY SET IN OPTIONS")
-
-            self._window.press_reset_keys()
+            if self._get_create_world_key() is not None:
+                self._window.press_key(self._get_create_world_key())
+            else:
+                self.log("!!! No create world key is set!!!")
 
             self._pause_on_load = pause_on_load and not single_instance
             self._use_f3 = use_f3

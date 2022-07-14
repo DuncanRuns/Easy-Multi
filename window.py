@@ -84,6 +84,8 @@ class Window:
     def press_reset_keys(self, attempts=2, use_post=True) -> None:
         """
         Runs esc, shift-tab, enter twice on the window.
+
+        press_key(key) with key being equal to Atum's create world key should be used instead.
         """
         v = self.get_mc_version()
         version_major = v[1]
