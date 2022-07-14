@@ -31,6 +31,23 @@ class Logger:
                 callback(line)
 
 
+class PrintLogger(Logger):
+    """Logger which defaults to printing the log rather than outputting to a file.
+    """
+
+    def __init__(self) -> None:
+        self._callbacks: List[Callable[[str], None]] = []
+        self._log_lock = threading.Lock()
+        self.add_callback(print)
+
+    def _log_thread(self, line: str, source: str = None) -> None:
+        if source:
+            line = f"[{source}] {line}"
+        with self._log_lock:
+            for callback in self._callbacks:
+                callback(line)
+
+
 def get_or_create_folder() -> str:
     fol = os.path.join(easy_multi_options.get_or_create_folder(), "logs")
     if not os.path.isdir(fol):
