@@ -138,14 +138,7 @@ class MinecraftInstance:
             return
 
         with self._tick_lock:
-            # Window replacer
-            if self._window is None:
-                self._window = get_window_by_dir(self._game_dir)
-                self._log_progress = 0
-            elif not self._window.exists():
-                self._window = None
-
-            else:
+            if self.has_window():
                 # Ensure borderless
                 if not self._window.is_borderless():
                     self._window.go_borderless()
@@ -204,8 +197,16 @@ class MinecraftInstance:
                 i = -1
         return i
 
-    def get_window(self) -> Window:
+    def get_window(self) -> Union[Window, None]:
         return self._window
+
+    def has_window(self) -> bool:
+        if self._window is None:
+            self._window = get_window_by_dir(self._game_dir)
+            self._log_progress = 0
+        elif not self._window.exists():
+            self._window = None
+        return self._window is not None
 
     def __eq__(self, __o: object) -> bool:
         return type(self) == type(__o) and self._game_dir == __o._game_dir
