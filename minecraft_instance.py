@@ -27,8 +27,8 @@ class MinecraftInstance:
         if not logger:
             logger = PrintLogger()
         self._logger = logger
-        self._log_name = self._game_dir.split(
-        )[1].replace("\\", "/").strip("/")
+
+        self._name = None
 
         self._pause_on_wp: bool = False
         self._pause_on_load: bool = False
@@ -38,6 +38,7 @@ class MinecraftInstance:
         self._loaded_world: bool = True
 
         self._create_world_key = None
+        self._mc_version = None
 
         self._tick_lock = threading.Lock()
         self._reset_lock = threading.Lock()
@@ -52,7 +53,17 @@ class MinecraftInstance:
                 self._log_progress = len(f.read())
 
     def log(self, line: str) -> None:
-        self._logger.log(line, self._log_name)
+        self._logger.log(line, self.get_name())
+
+    def get_name(self) -> str:
+        self._name = os.path.split(self._game_dir)[
+            1].replace("\\", "/").strip("/")
+
+        if self._name == ".minecraft":
+            self._name = os.path.split(os.path.split(self._game_dir)[0])[
+                1].replace("\\", "/").strip("/")
+
+        return self._name
 
     def _get_create_world_key(self) -> Union[int, None]:
         if self._create_world_key is not None:
@@ -71,22 +82,32 @@ class MinecraftInstance:
             pass
         return None
 
+    def _get_mc_version(self) -> Union[Tuple[int, int, int], None]:
+        if self._mc_version:
+            return self._mc_version
+        self._mc_version = self._window.get_mc_version()
+        return self._mc_version
+
     def reset(self, pause_on_load: bool = True, use_f3: bool = True, clear_worlds: bool = True, single_instance: bool = False) -> None:
         with self._reset_lock:
+            self.log("Resetting...")
             self.get_next_log_lines()
             if self._window is None or not self._window.exists():
                 self.log("No window opened yet...")
                 return
 
-            if self._get_create_world_key() is not None:
-                self._window.press_key(self._get_create_world_key())
+            if self._get_mc_version()[1] < 14:
+                self._window.press_reset_keys()
             else:
-                self.log("!!! No create world key is set!!!")
+                if self._get_create_world_key() is not None:
+                    self._window.press_key(self._get_create_world_key())
+                else:
+                    self.log("!!! No create world key is set!!!")
 
             self._pause_on_load = pause_on_load and not single_instance
             self._use_f3 = use_f3
 
-            self._loaded_preview = self._window.get_mc_version()[1] < 14
+            self._loaded_preview = self._get_mc_version()[1] < 14
             self._loaded_world = False
 
             if clear_worlds:
