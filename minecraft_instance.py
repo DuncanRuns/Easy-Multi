@@ -1,4 +1,4 @@
-import os, re, input_util, clear_util, threading, time
+import os, re, input_util, clear_util, threading
 from logger import Logger, PrintLogger
 from window import Window, get_all_mc_windows, get_current_window, get_window_by_dir
 from typing import Tuple, Union, List
@@ -64,6 +64,9 @@ class MinecraftInstance:
                 1].replace("\\", "/").strip("/")
 
         return self._name
+
+    def is_world_loaded(self) -> bool:
+        return self._loaded_world
 
     def _get_create_world_key(self) -> Union[int, None]:
         if self._create_world_key is not None:
@@ -200,12 +203,13 @@ class MinecraftInstance:
     def get_window(self) -> Union[Window, None]:
         return self._window
 
-    def has_window(self) -> bool:
-        if self._window is None:
-            self._window = get_window_by_dir(self._game_dir)
-            self._log_progress = 0
-        elif not self._window.exists():
-            self._window = None
+    def has_window(self, no_update: bool = False) -> bool:
+        if not no_update:
+            if self._window is None:
+                self._window = get_window_by_dir(self._game_dir)
+                self._log_progress = 0
+            elif not self._window.exists():
+                self._window = None
         return self._window is not None
 
     def __eq__(self, __o: object) -> bool:
