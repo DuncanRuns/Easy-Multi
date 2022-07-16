@@ -1,7 +1,6 @@
 # Object oriented abstraction layer on top of win_util
 
-import time
-import hwnd_util, win32con, threading
+import hwnd_util, win32con, threading, time, re
 from typing import List, Tuple, Union
 
 _mc_window_cache = []
@@ -21,6 +20,11 @@ class Window:
     def revert_title(self) -> None:
         self.set_title(self._original_title)
 
+    def is_minecraft(self) -> bool:
+        mc_match = re.compile(
+            r"^Minecraft\*? 1\.[1-9]\d*(\.[1-9]\d*)?( .*)?$").match
+        return mc_match(self.get_original_title())
+
     def get_mc_version(self) -> Union[Tuple[int, int, int], None]:
         try:
             vstr = self._original_title.split()[1]
@@ -31,6 +35,9 @@ class Window:
         except:
             return None
 
+    def is_minimized(self) -> bool:
+        return hwnd_util.is_hwnd_minimized(self._hwnd)
+
     def set_title(self, title: str) -> None:
         hwnd_util.set_hwnd_title(self._hwnd, title)
 
@@ -39,6 +46,11 @@ class Window:
 
     def activate(self) -> None:
         hwnd_util.activate_hwnd(self._hwnd)
+
+    def show(self) -> None:
+        """Like activate but doesn't set to the foreground.
+        """
+        hwnd_util.show_hwnd(self._hwnd)
 
     def is_active(self) -> bool:
         return self._hwnd == hwnd_util.get_current_hwnd()
@@ -156,6 +168,8 @@ def get_current_window() -> Window:
         window = Window(hwnd_util.get_current_hwnd())
         if window in _mc_window_cache:
             window = _mc_window_cache[_mc_window_cache.index(window)]
+        else:
+            _mc_window_cache.append(window)
     return window
 
 

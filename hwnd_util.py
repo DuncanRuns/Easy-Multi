@@ -144,6 +144,10 @@ def undo_hwnd_borderless(hwnd) -> None:
     set_hwnd_style(hwnd, 382664704)
 
 
+def show_hwnd(hwnd: int) -> None:
+    win32gui.ShowWindow(hwnd, 3)
+
+
 def set_hwnd_title(hwnd: int, text: str) -> None:
     win32gui.SetWindowText(hwnd, text)
 
@@ -151,7 +155,7 @@ def set_hwnd_title(hwnd: int, text: str) -> None:
 def activate_hwnd(hwnd: int) -> None:
     global shell
     shell.SendKeys('%')
-    win32gui.ShowWindow(hwnd, 5)
+    show_hwnd(hwnd)
     win32gui.SetForegroundWindow(hwnd)
 
 
@@ -230,6 +234,10 @@ def is_hwnd_fullscreen(hwnd: int) -> bool:
     # Borderless, Maximized, and Regular window style is around 0x0000000016cf0000 or 382664704
     # Whichever the current style is closer to should give if it is fullscreen or not
     return abs(style_long - FULLSCREEN_STYLE) < abs(style_long - REGULAR_STYLE)
+
+
+def is_hwnd_minimized(hwnd: int) -> bool:
+    return win32gui.IsIconic(hwnd)
 
 
 if __name__ == "__main__":

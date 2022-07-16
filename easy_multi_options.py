@@ -5,8 +5,10 @@ import os
 
 class EasyMultiOptions(BasicOptions):
     def set_defaults(self) -> None:
-        self.use_wall = False
         self.use_fullscreen = False
+        self.pause_on_load = True
+        self.use_f3 = True
+
         self.screen_location = [0, 0]
         self.screen_size = [1920, 1080]
 

@@ -1,10 +1,17 @@
-import threading
+import threading, traceback
 from logger import Logger
-from minecraft_instance import MinecraftInstance, get_all_mc_instances
+from minecraft_instance import MinecraftInstance, get_all_mc_instances, get_current_mc_instance
 from easy_multi_options import EasyMultiOptions
 from input_util import *
 
 VERSION = "2.0.0-dev"
+
+
+class InstanceInfo:
+    def __init__(self, name: str, has_window: bool, world_loaded: bool) -> None:
+        self.name = name
+        self.has_window = has_window
+        self.world_loaded = world_loaded
 
 
 class EasyMulti:
@@ -15,20 +22,85 @@ class EasyMulti:
         self._options = options
         self._logger = logger
 
+        self._update_hotkeys()
+
         self.log("Initialized")
 
     def log(self, line: str) -> None:
         self._logger.log(line, "EasyMulti")
 
-    def _setup_instances(self) -> None:
+    def _update_hotkeys(self) -> None:
+        clear_and_stop_hotkey_checker()
+        register_hotkey(self._options["reset_hotkey"],
+                        self._reset_hotkey_press)
+        register_hotkey(self._options["hide_hotkey"],
+                        self._hide_hotkey_press)
+        register_hotkey(self._options["bg_reset_hotkey"],
+                        self._bg_reset_hotkey_press)
+
+        start_hotkey_checker()
+
+    def setup_instances(self) -> None:
+        self.log("Redetecting Instances...")
         self._mc_instances = get_all_mc_instances()
+        for instance in self._mc_instances:
+            instance.set_logger(self._logger)
+        self.log(f"Found {len(self._mc_instances)} instance(s).")
+
+    def _reset_hotkey_press(self) -> None:
+        current_instance = get_current_mc_instance()
+        try:
+
+            # this looks weird but checks that current_instance is not None
+            if current_instance and current_instance in self._mc_instances:
+                already_reset = False
+                if self._options["use_fullscreen"]:
+                    already_reset = True
+                    current_instance.reset(pause_on_load=self._options["pause_on_load"], use_f3=self._options["use_f3"],
+                                           clear_worlds=self._options["auto_clear_worlds"], single_instance=len(self._mc_instances) == 1)
+                    time.sleep(0.05)
+
+                next_ind = self._mc_instances.index(current_instance) + 1
+                if next_ind >= len(self._mc_instances):
+                    next_ind = 0
+                next_instance = self._mc_instances[next_ind]
+                if next_instance.has_window(True):
+                    self._mc_instances[next_ind].activate(
+                        self._options["use_fullscreen"])
+                else:
+                    self.log(f"Missing window for {next_instance.get_name()}")
+
+                if not already_reset:
+                    current_instance.reset(pause_on_load=self._options["pause_on_load"], use_f3=self._options["use_f3"],
+                                           clear_worlds=self._options["auto_clear_worlds"], single_instance=len(self._mc_instances) == 1)
+        except Exception:
+            self.log("Error during reset: " +
+                     traceback.format_exc().replace("\n", "\\n"))
+
+    def _hide_hotkey_press(self) -> None:
+        self.log("Hide key!")
+
+    def _bg_reset_hotkey_press(self) -> None:
+        self.log("BG Reset key!")
+
+    def get_instance_infos(self) -> List[InstanceInfo]:
+        return [
+            InstanceInfo(
+                instance.get_name(), instance.has_window(True), instance.is_world_loaded()
+            ) for instance in self._mc_instances
+        ]
 
     def tick(self) -> None:
         if self._tick_lock.locked():
             # Cancel tick if already being ran
             return
         with self._tick_lock:
-            pass
+            active_instance = get_current_mc_instance()
+            if len(self._mc_instances) == 1:
+                active_instance = self._mc_instances[0]
+            for instance in self._mc_instances:
+                instance.tick(
+                    self._options["screen_location"], self._options["screen_size"], instance == active_instance)
 
 
 if __name__ == "__main__":

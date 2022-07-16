@@ -1,4 +1,5 @@
-import os, re, input_util, clear_util, threading
+import os, re, input_util, clear_util, threading, time
+import sys
 from logger import Logger, PrintLogger
 from window import Window, get_all_mc_windows, get_current_window, get_window_by_dir
 from typing import Tuple, Union, List
@@ -38,6 +39,7 @@ class MinecraftInstance:
         self._loaded_world: bool = True
 
         self._create_world_key = None
+        self._fullscreen_key = None
         self._mc_version = None
 
         self._tick_lock = threading.Lock()
@@ -55,6 +57,9 @@ class MinecraftInstance:
     def log(self, line: str) -> None:
         self._logger.log(line, self.get_name())
 
+    def set_logger(self, logger: Logger) -> None:
+        self._logger = logger
+
     def get_name(self) -> str:
         self._name = os.path.split(self._game_dir)[
             1].replace("\\", "/").strip("/")
@@ -69,21 +74,30 @@ class MinecraftInstance:
         return self._loaded_world
 
     def _get_create_world_key(self) -> Union[int, None]:
-        if self._create_world_key is not None:
+        if self._create_world_key:
             return self._create_world_key
+        self._create_world_key = self._get_key("key_Create New World")
+        return self._create_world_key
+
+    def _get_fullscreen_key(self) -> Union[int, None]:
+        if self._fullscreen_key:
+            return self._fullscreen_key
+        self._fullscreen_key = self._get_key("key_key.fullscreen")
+        if not self._fullscreen_key:
+            return 0x7A
+        return self._fullscreen_key
+
+    def _get_key(self, key: str) -> Union[int, None]:
         options_path = os.path.join(self._game_dir, "options.txt")
         try:
             with open(options_path) as f:
                 for line in f:
                     args = line.split(":")
-                    if args[0] == "key_Create New World":
-                        self._create_world_key = input_util.get_vk_from_minecraft(
+                    if args[0] == key:
+                        return input_util.get_vk_from_minecraft(
                             args[1].rstrip())
-                        break
-            return self._create_world_key
         except:
             pass
-        return None
 
     def _get_mc_version(self) -> Union[Tuple[int, int, int], None]:
         if self._mc_version:
@@ -99,6 +113,9 @@ class MinecraftInstance:
                 self.log("No window opened yet...")
                 return
 
+            if self._window.is_fullscreen():
+                self._window.press_key(self._get_fullscreen_key())
+
             if self._get_mc_version()[1] < 14:
                 self._window.press_reset_keys()
             else:
@@ -109,6 +126,7 @@ class MinecraftInstance:
 
             self._pause_on_load = pause_on_load and not single_instance
             self._use_f3 = use_f3
+            self._use_fullscreen = False
 
             self._loaded_preview = self._get_mc_version()[1] < 14
             self._loaded_world = False
@@ -116,42 +134,53 @@ class MinecraftInstance:
             if clear_worlds:
                 threading.Thread(target=self.clear_worlds).start()
 
-            if self._window.is_fullscreen() and not single_instance:
-                self._window.press_f11()
-            elif not self._window.is_fullscreen() and single_instance:
-                self._window.press_f11()
-
     def activate(self, use_fullscreen: bool = False) -> None:
         with self._reset_lock:
-            self.cancel_plans()
+            self._use_fullscreen = use_fullscreen
+
             if self._window is not None and self._window.exists():
+                self._window.show()
                 self._window.activate()
-            if use_fullscreen and not self._window.is_fullscreen():
-                self._window.press_f11()
-            elif not use_fullscreen and self._window.is_fullscreen():
-                self._window.press_f11()
 
-    def cancel_plans(self) -> None:
-        self._loaded_preview = True
-        self._loaded_world = True
+            if self._pause_on_load and self._loaded_world:
+                if use_fullscreen:
+                    self._window.press_key(self._get_fullscreen_key())
 
-    def tick(self, window_pos=(0, 0), window_size=(1920, 1080)) -> None:
+                # Magic Number :((( Without this, the mouse does not get locked into MC
+                time.sleep(0.05)
+
+                self._window.press_esc()
+            self._pause_on_load = False
+
+            self.log("Activated")
+
+    def tick(self, window_pos=(0, 0), window_size=(1920, 1080), is_active: bool = True) -> None:
         if self._tick_lock.locked():
             # Cancel tick if already being ran
             return
 
         with self._tick_lock:
+            sys.stdout.flush()
             if self.has_window():
+
+                if self._window.is_minimized():
+                    self.log("Unminimizing..")
+                    self._window.show()
+                    if self._window.is_fullscreen():
+                        self._window.press_key(self._get_fullscreen_key())
+
                 # Ensure borderless
                 if not self._window.is_borderless():
+                    self._window.show()
+                    time.sleep(0.05)
                     self._window.go_borderless()
                     self._window.move(window_pos, window_size)
 
                 # Log Reader
-                if (not self._loaded_preview) or (self._pause_on_load and not self._loaded_world):
-                    self._process_plans()
+                if (not self._loaded_preview) or (not self._loaded_world):
+                    self._process_plans(is_active)
 
-    def _process_plans(self) -> None:
+    def _process_plans(self, is_active: bool = True) -> None:
         new_log_lines = self.get_next_log_lines()
         if not self._loaded_preview:
             for line in new_log_lines:
@@ -170,6 +199,8 @@ class MinecraftInstance:
                             self._window.press_f3_esc()
                         else:
                             self._window.press_esc()
+                    if is_active and (not self._window.is_fullscreen()) and self._use_fullscreen:
+                        self._window.press_key(self._get_fullscreen_key())
                     break
 
     def get_next_log_lines(self) -> List[str]:
@@ -221,8 +252,8 @@ _mc_instance_cache: List[MinecraftInstance] = []
 
 def _get_instance_total(instance: MinecraftInstance):
     total = 0
-    nums = [i for i in range(10)]
-    for c in instance._game_dir:
+    nums = [str(i) for i in range(10)]
+    for c in instance.get_game_dir():
         if c in nums:
             total += 11
             total += int(c)
@@ -252,10 +283,22 @@ def get_all_mc_instances() -> List[MinecraftInstance]:
 def get_current_mc_instance() -> Union[MinecraftInstance, None]:
     with _retreive_lock:
         global _mc_instance_cache
-        instance = MinecraftInstance(window=get_current_window())
+        try:
+            window = get_current_window()
+            if window.is_minecraft():
+                instance = MinecraftInstance(window=window)
+            else:
+                return None
+        except:
+            return None
         if instance in _mc_instance_cache:
             instance = _mc_instance_cache[_mc_instance_cache.index(instance)]
-    return instance
+        else:
+            _mc_instance_cache.append(instance)
+    mc_match = re.compile(
+        r"^Minecraft\*? 1\.[1-9]\d*(\.[1-9]\d*)?( .*)?$").match
+    if mc_match(instance.get_window().get_original_title()):
+        return instance
 
 
 if __name__ == "__main__":
