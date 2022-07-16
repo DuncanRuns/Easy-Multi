@@ -1,6 +1,5 @@
-import shutil
-from basic_options import BasicOptions
 import os
+from basic_options import BasicOptions
 
 
 class EasyMultiOptions(BasicOptions):
