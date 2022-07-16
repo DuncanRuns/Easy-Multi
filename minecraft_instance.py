@@ -1,5 +1,4 @@
 import os, re, input_util, clear_util, threading, time
-import sys
 from logger import Logger, PrintLogger
 from window import Window, get_all_mc_windows, get_current_window, get_window_by_dir
 from typing import Tuple, Union, List
@@ -160,7 +159,6 @@ class MinecraftInstance:
             return
 
         with self._tick_lock:
-            sys.stdout.flush()
             if self.has_window():
 
                 if self._window.is_minimized():
