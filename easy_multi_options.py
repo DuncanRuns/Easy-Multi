@@ -10,6 +10,8 @@ class EasyMultiOptions(BasicOptions):
         self.use_fullscreen = False
         self.use_borderless = False
 
+        self.clipboard_on_reset = ""
+
         self.screen_location = [0, 0]
         self.screen_size = [1920, 1080]
 

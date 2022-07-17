@@ -1,4 +1,4 @@
-import threading, traceback
+import threading, traceback, clipboard
 from logger import Logger
 from minecraft_instance import EMMinecraftInstance, get_all_mc_instances, get_current_mc_instance
 from easy_multi_options import get_options_instance
@@ -71,6 +71,10 @@ class EasyMulti:
 
                 if not already_reset:
                     current_instance.reset(len(self._mc_instances) == 1)
+
+                if self._options["clipboard_on_reset"] != "":
+                    clipboard.copy(self._options["clipboard_on_reset"])
+
         except Exception:
             self.log("Error during reset: " +
                      traceback.format_exc().replace("\n", "\\n"))
