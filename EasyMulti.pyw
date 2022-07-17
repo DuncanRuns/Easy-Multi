@@ -5,7 +5,7 @@
 import tkinter.messagebox as tkMessageBox
 import traceback
 from easy_multi_gui import *
-from easy_multi_options import EasyMultiOptions, get_location, get_options_instance
+from easy_multi_options import get_location, get_options_instance
 from logger import Logger
 from input_util import clear_and_stop_hotkey_checker
 
@@ -16,7 +16,7 @@ def main():
         options = get_options_instance().try_load_file(opt_path)
         logger = Logger()
         logger.add_callback(print)
-        ema = EasyMultiGUI(options, logger)
+        ema = EasyMultiGUI(logger)
         ema.mainloop()
         options.save_file(opt_path)
         clear_and_stop_hotkey_checker()

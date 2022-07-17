@@ -16,6 +16,9 @@ class EMMinecraftInstance:
     def __init__(self, game_dir: str = None, window: Window = None, logger: Logger = None) -> None:
         self._window: Window
         self._game_dir: str
+
+        self._options = get_options_instance()
+
         if game_dir:
             self._game_dir = game_dir
             self._window = window if window else get_window_by_dir(game_dir)

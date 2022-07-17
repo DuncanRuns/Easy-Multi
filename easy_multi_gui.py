@@ -2,7 +2,7 @@ import ttkthemes, threading, os
 import tkinter as tk
 from tkinter import ttk
 from easy_multi import EasyMulti, VERSION
-from easy_multi_options import EasyMultiOptions
+from easy_multi_options import get_options_instance
 from logger import Logger
 
 
@@ -22,10 +22,10 @@ class InstancesDisplay(ttk.Frame):
 
 
 class EasyMultiGUI(ttkthemes.ThemedTk):
-    def __init__(self, options: EasyMultiOptions, logger: Logger) -> None:
+    def __init__(self, logger: Logger) -> None:
         ttkthemes.ThemedTk.__init__(self, theme="breeze")
 
-        self._options = options
+        self._options = get_options_instance()
         self._logger = logger
 
         self._logger.add_callback(self._on_log)
@@ -38,7 +38,7 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         self.attributes("-topmost", 1)
 
         self.log("Initializing EasyMulti...")
-        self.easy_multi = EasyMulti(options, logger)
+        self.easy_multi = EasyMulti(logger)
 
         self.log("Creating widgets...")
         self._main_frame = ttk.Frame(self)
