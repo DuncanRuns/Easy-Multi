@@ -166,7 +166,7 @@ class EMMinecraftInstance:
                         self._window.press_key(self._get_fullscreen_key())
 
                 # Ensure borderless
-                if not self._window.is_borderless() and self._options["use_borderless"]:
+                if self._options["use_borderless"] and not self._window.is_borderless():
                     self._window.show()
                     time.sleep(0.05)
                     self._window.go_borderless()
@@ -195,7 +195,7 @@ class EMMinecraftInstance:
                             self._window.press_f3_esc()
                         else:
                             self._window.press_esc()
-                    if is_active and (not self._window.is_fullscreen()) and self._options["use_fullscreen"]:
+                    if is_active and self._options["use_fullscreen"] and (not self._window.is_fullscreen()):
                         self._window.press_key(self._get_fullscreen_key())
                     break
 
