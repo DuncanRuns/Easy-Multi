@@ -1,6 +1,6 @@
 import threading, traceback
 from logger import Logger
-from minecraft_instance import MinecraftInstance, get_all_mc_instances, get_current_mc_instance
+from minecraft_instance import EMMinecraftInstance, get_all_mc_instances, get_current_mc_instance
 from easy_multi_options import EasyMultiOptions
 from input_util import *
 
@@ -17,7 +17,7 @@ class InstanceInfo:
 class EasyMulti:
     def __init__(self, options: EasyMultiOptions, logger: Logger) -> None:
         self._tick_lock = threading.Lock()
-        self._mc_instances: List[MinecraftInstance] = []
+        self._mc_instances: List[EMMinecraftInstance] = []
 
         self._options = options
         self._logger = logger

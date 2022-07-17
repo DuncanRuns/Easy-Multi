@@ -4,9 +4,11 @@ from basic_options import BasicOptions
 
 class EasyMultiOptions(BasicOptions):
     def set_defaults(self) -> None:
-        self.use_fullscreen = False
         self.pause_on_load = True
         self.use_f3 = True
+
+        self.use_fullscreen = False
+        self.use_borderless = False
 
         self.screen_location = [0, 0]
         self.screen_size = [1920, 1080]
@@ -22,6 +24,13 @@ class EasyMultiOptions(BasicOptions):
         self.reset_hotkey = ["u"]
         self.hide_hotkey = ["p"]
         self.bg_reset_hotkey = ["["]
+
+
+INSTANCE = EasyMultiOptions()
+
+
+def get_options_instance() -> EasyMultiOptions:
+    return INSTANCE
 
 
 def get_or_create_folder() -> str:

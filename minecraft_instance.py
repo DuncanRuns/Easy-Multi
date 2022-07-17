@@ -2,6 +2,7 @@ import os, re, input_util, clear_util, threading, time
 from logger import Logger, PrintLogger
 from window import Window, get_all_mc_windows, get_current_window, get_window_by_dir
 from typing import Tuple, Union, List
+from easy_multi_options import get_options_instance
 
 _match_view_start = re.compile(
     r"^\[\d\d:\d\d:\d\d\] \[Render thread\/INFO\]: Starting Preview at \(-?\d+.5, \d+.0, -?\d+.5\)$").match
@@ -11,7 +12,7 @@ _match_world_load = re.compile(
 _retreive_lock = threading.Lock()
 
 
-class MinecraftInstance:
+class EMMinecraftInstance:
     def __init__(self, game_dir: str = None, window: Window = None, logger: Logger = None) -> None:
         self._window: Window
         self._game_dir: str
@@ -245,10 +246,10 @@ class MinecraftInstance:
         return type(self) == type(__o) and self._game_dir == __o._game_dir
 
 
-_mc_instance_cache: List[MinecraftInstance] = []
+_mc_instance_cache: List[EMMinecraftInstance] = []
 
 
-def _get_instance_total(instance: MinecraftInstance):
+def _get_instance_total(instance: EMMinecraftInstance):
     total = 0
     nums = [str(i) for i in range(10)]
     for c in instance.get_game_dir():
@@ -258,17 +259,17 @@ def _get_instance_total(instance: MinecraftInstance):
     return total
 
 
-def sort_instances_list(instances: List[MinecraftInstance]) -> None:
+def sort_instances_list(instances: List[EMMinecraftInstance]) -> None:
     instances.sort(key=_get_instance_total)
 
 
-def get_all_mc_instances() -> List[MinecraftInstance]:
+def get_all_mc_instances() -> List[EMMinecraftInstance]:
     with _retreive_lock:
         global _mc_instance_cache
         windows = get_all_mc_windows()
         instances = []
         for window in windows:
-            instance = MinecraftInstance(window.get_mc_dir(), window)
+            instance = EMMinecraftInstance(window.get_mc_dir(), window)
             if instance in _mc_instance_cache:
                 instance = _mc_instance_cache[
                     _mc_instance_cache.index(instance)]
@@ -278,13 +279,13 @@ def get_all_mc_instances() -> List[MinecraftInstance]:
         return instances
 
 
-def get_current_mc_instance() -> Union[MinecraftInstance, None]:
+def get_current_mc_instance() -> Union[EMMinecraftInstance, None]:
     with _retreive_lock:
         global _mc_instance_cache
         try:
             window = get_current_window()
             if window.is_minecraft():
-                instance = MinecraftInstance(window=window)
+                instance = EMMinecraftInstance(window=window)
             else:
                 return None
         except:
