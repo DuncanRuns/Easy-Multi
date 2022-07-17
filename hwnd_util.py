@@ -155,7 +155,6 @@ def set_hwnd_title(hwnd: int, text: str) -> None:
 def activate_hwnd(hwnd: int) -> None:
     global shell
     shell.SendKeys('%')
-    show_hwnd(hwnd)
     win32gui.SetForegroundWindow(hwnd)
 
 

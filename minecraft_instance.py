@@ -137,7 +137,7 @@ class EMMinecraftInstance:
         with self._reset_lock:
 
             if self._window is not None and self._window.exists():
-                self._window.show()
+                # self._window.show()
                 self._window.activate()
 
             if self._pause_on_load and self._loaded_world:
