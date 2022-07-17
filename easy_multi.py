@@ -56,8 +56,7 @@ class EasyMulti:
                 already_reset = False
                 if self._options["use_fullscreen"]:
                     already_reset = True
-                    current_instance.reset(pause_on_load=self._options["pause_on_load"], use_f3=self._options["use_f3"],
-                                           clear_worlds=self._options["auto_clear_worlds"], single_instance=len(self._mc_instances) == 1)
+                    current_instance.reset(len(self._mc_instances) == 1)
                     time.sleep(0.05)
 
                 next_ind = self._mc_instances.index(current_instance) + 1
@@ -71,8 +70,7 @@ class EasyMulti:
                     self.log(f"Missing window for {next_instance.get_name()}")
 
                 if not already_reset:
-                    current_instance.reset(pause_on_load=self._options["pause_on_load"], use_f3=self._options["use_f3"],
-                                           clear_worlds=self._options["auto_clear_worlds"], single_instance=len(self._mc_instances) == 1)
+                    current_instance.reset(len(self._mc_instances) == 1)
         except Exception:
             self.log("Error during reset: " +
                      traceback.format_exc().replace("\n", "\\n"))

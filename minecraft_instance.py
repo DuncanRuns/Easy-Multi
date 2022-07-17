@@ -34,9 +34,7 @@ class EMMinecraftInstance:
 
         self._name = None
 
-        self._pause_on_wp: bool = False
         self._pause_on_load: bool = False
-        self._use_f3: bool = False
 
         self._loaded_preview: bool = True
         self._loaded_world: bool = True
@@ -108,7 +106,7 @@ class EMMinecraftInstance:
         self._mc_version = self._window.get_mc_version()
         return self._mc_version
 
-    def reset(self, pause_on_load: bool = True, use_f3: bool = True, clear_worlds: bool = True, single_instance: bool = False) -> None:
+    def reset(self, single_instance: bool = False) -> None:
         with self._reset_lock:
             self.log("Resetting...")
             self.get_next_log_lines()
@@ -127,19 +125,16 @@ class EMMinecraftInstance:
                 else:
                     self.log("!!! No create world key is set!!!")
 
-            self._pause_on_load = pause_on_load and not single_instance
-            self._use_f3 = use_f3
-            self._use_fullscreen = False
+            self._pause_on_load = self._options["pause_on_load"] and not single_instance
 
             self._loaded_preview = self._get_mc_version()[1] < 14
             self._loaded_world = False
 
-            if clear_worlds:
+            if self._options["auto_clear_worlds"]:
                 threading.Thread(target=self.clear_worlds).start()
 
     def activate(self, use_fullscreen: bool = False) -> None:
         with self._reset_lock:
-            self._use_fullscreen = use_fullscreen
 
             if self._window is not None and self._window.exists():
                 self._window.show()
@@ -172,7 +167,7 @@ class EMMinecraftInstance:
                         self._window.press_key(self._get_fullscreen_key())
 
                 # Ensure borderless
-                if not self._window.is_borderless():
+                if not self._window.is_borderless() and self._options["use_borderless"]:
                     self._window.show()
                     time.sleep(0.05)
                     self._window.go_borderless()
@@ -189,7 +184,7 @@ class EMMinecraftInstance:
                 if _match_view_start(line):
                     self._loaded_preview = True
                     self._loaded_world = False
-                    if self._use_f3:
+                    if self._options["use_f3"]:
                         self._window.press_f3_esc()
                     break
         if not self._loaded_world:
@@ -197,11 +192,11 @@ class EMMinecraftInstance:
                 if _match_world_load(line):
                     self._loaded_world = True
                     if self._pause_on_load:
-                        if self._use_f3:
+                        if self._options["use_f3"]:
                             self._window.press_f3_esc()
                         else:
                             self._window.press_esc()
-                    if is_active and (not self._window.is_fullscreen()) and self._use_fullscreen:
+                    if is_active and (not self._window.is_fullscreen()) and self._options["use_fullscreen"]:
                         self._window.press_key(self._get_fullscreen_key())
                     break
 
