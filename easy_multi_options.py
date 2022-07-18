@@ -1,4 +1,4 @@
-import os
+import os, screeninfo
 from basic_options import BasicOptions
 
 
@@ -7,16 +7,19 @@ class EasyMultiOptions(BasicOptions):
         self.pause_on_load = True
         self.use_f3 = True
 
+        self.auto_clear_worlds = True
+        self.clipboard_on_reset = ""
+
         self.use_fullscreen = False
         self.use_borderless = False
-
-        self.clipboard_on_reset = ""
 
         self.screen_location = [0, 0]
         self.screen_size = [1920, 1080]
 
-        # World Deletion
-        self.auto_clear_worlds = True
+        for monitor in screeninfo.get_monitors():
+            if monitor.is_primary:
+                self.screen_location = [monitor.x, monitor.y]
+                self.screen_size = [monitor.width, monitor.height]
 
         # Instance Hiding
         self.auto_hide = False

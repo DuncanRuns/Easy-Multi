@@ -1,7 +1,8 @@
 import ttkthemes, threading, os
 import tkinter as tk
+from typing import Callable, List
 from tkinter import ttk
-from easy_multi import EasyMulti, VERSION
+from easy_multi import EasyMulti, VERSION, InstanceInfo
 from easy_multi_options import get_options_instance
 from logger import Logger
 
@@ -15,10 +16,77 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-class InstancesDisplay(ttk.Frame):
-    def __init__(self, parent) -> None:
-        ttk.Frame.__init__(self, parent)
-        self._parent = parent
+class InstancesDisplay(ttk.LabelFrame):
+    def __init__(self, parent: tk.Widget, remove_callback: Callable[[int], None]) -> None:
+        ttk.LabelFrame.__init__(self, parent, text="Instances")
+        self._remove_callback = remove_callback
+
+    def update_infos(infos: List[InstanceInfo]) -> None:
+        pass
+
+
+class OptionsMenu(tk.Toplevel):
+    def __init__(self, master) -> None:
+        tk.Toplevel.__init__(self, master)
+        self.log: Callable[[str, ], None] = master.log
+        self.title("Easy Multi Options")
+        self.attributes("-topmost", 1)
+        self.resizable(0, 0)
+        try:
+            self.iconbitmap(resource_path("EasyMulti.ico"))
+        except:
+            pass
+
+        self._options = get_options_instance()
+
+        self._main_frame = ttk.Frame(self)
+        self._main_frame.grid()
+        self._init_widgets()
+
+    def _init_widgets(self) -> None:
+        self._init_widgets_left()
+        self._init_widgets_right()
+
+    def _init_widgets_left(self) -> None:
+        frame = ttk.Frame(self._main_frame)
+        frame.grid(row=0, column=0, sticky="NW", padx=5, pady=5)
+
+        var = tk.BooleanVar(self)
+        self._options.set_option_wrapper("pause_on_load", var)
+        ttk.Checkbutton(frame, text="Pause on Load",
+                        variable=var).pack(padx=5, pady=5, anchor="w")
+
+        var = tk.BooleanVar(self)
+        self._options.set_option_wrapper("use_f3", var)
+        ttk.Checkbutton(frame, text="Use F3",
+                        variable=var).pack(padx=5, pady=5, anchor="w")
+
+        var = tk.BooleanVar(self)
+        self._options.set_option_wrapper("auto_clear_worlds", var)
+        ttk.Checkbutton(frame, text="Auto Clear Worlds",
+                        variable=var).pack(padx=5, pady=5, anchor="w")
+
+        clipboard_frame = ttk.Frame(frame)
+        clipboard_frame.pack(padx=5, pady=5, anchor="w")
+
+        var = tk.StringVar(self)
+        self._options.set_option_wrapper("clipboard_on_reset", var)
+        ttk.Label(clipboard_frame, text="Clipboard on Reset:").pack(anchor="w")
+        ttk.Entry(clipboard_frame, textvariable=var).pack(anchor="w")
+
+    def _init_widgets_right(self) -> None:
+        frame = ttk.Frame(self._main_frame)
+        frame.grid(row=0, column=1, sticky="NW", padx=5, pady=5)
+
+        var = tk.BooleanVar(self)
+        self._options.set_option_wrapper("use_fullscreen", var)
+        ttk.Checkbutton(frame, text="Use Fullscreen",
+                        variable=var).pack(padx=5, pady=5, anchor="w")
+
+        var = tk.BooleanVar(self)
+        self._options.set_option_wrapper("use_borderless", var)
+        ttk.Checkbutton(frame, text="Use Borderless",
+                        variable=var).pack(padx=5, pady=5, anchor="w")
 
 
 class EasyMultiGUI(ttkthemes.ThemedTk):
@@ -34,28 +102,38 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         self.log("Setting up window...")
         self.title("Easy Multi v" + VERSION)
         self.resizable(0, 0)
-        self.iconbitmap(resource_path("EasyMulti.ico"))
+        try:
+            self.iconbitmap(resource_path("EasyMulti.ico"))
+        except:
+            pass
         self.attributes("-topmost", 1)
 
         self.log("Initializing EasyMulti...")
-        self.easy_multi = EasyMulti(logger)
+        self._easy_multi = EasyMulti(logger)
 
         self.log("Creating widgets...")
         self._main_frame = ttk.Frame(self)
         self._main_frame.pack()
         self._init_widgets()
 
+        self._options_menu: tk.Toplevel = None
+
         self.log("")
         self.log("Welcome to Easy Multi v" + VERSION)
         self.after(50, self._loop)
 
     def _loop(self) -> None:
-        threading.Thread(target=self.easy_multi.tick).start()
+        threading.Thread(target=self._easy_multi.tick).start()
         self.after(50, self._loop)
 
     def _init_widgets(self) -> None:
         self._init_log_widgets(0, 0)
         self._init_control_widgets(0, 1)
+        self._instances_display = InstancesDisplay(
+            self._main_frame, None)  # TODO: add remove_callback
+        self._instances_display.grid(
+            row=1, column=0, columnspan=2, padx=5, pady=5, sticky="NEWS")
+        self._main_frame.grid_rowconfigure(1, minsize=50)
 
     def _init_log_widgets(self, row: int, column: int, rowspan: int = 1, columnspan: int = 1) -> None:
         log_frame = ttk.LabelFrame(
@@ -79,10 +157,20 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
             return widget
 
         gr(ttk.Button(control_frame, text="Setup Instaces",
-           command=lambda *x: self.easy_multi.setup_instances()), 0, 0)
+           command=self._setup_instances), 0, 0)
 
-        gr(ttk.Button(control_frame, text="hello"),
-           1, 0).configure(state="disabled")
+        gr(ttk.Button(control_frame, text="Options...", command=lambda *x: self._open_options()),
+           100, 0)
+
+    def _setup_instances(self) -> None:
+        self._easy_multi.setup_instances()
+        # TODO: Make instances display
+
+    def _open_options(self) -> None:
+        if not (self._options_menu and self._options_menu.winfo_exists()):
+            self._options_menu = OptionsMenu(self)
+            self.log("Options opened")
+        self._options_menu.focus()
 
     def log(self, line: str) -> None:
         self._logger.log(line, "EasyMultiGUI")

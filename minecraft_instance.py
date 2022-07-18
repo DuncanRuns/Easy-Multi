@@ -160,7 +160,7 @@ class EMMinecraftInstance:
             if self.has_window():
 
                 if self._window.is_minimized():
-                    self.log("Unminimizing..")
+                    self.log("Unminimizing...")
                     self._window.show()
                     if self._window.is_fullscreen():
                         self._window.press_key(self._get_fullscreen_key())

@@ -45,7 +45,7 @@ class EasyMulti:
         self._mc_instances = get_all_mc_instances()
         for instance in self._mc_instances:
             instance.set_logger(self._logger)
-        self.log(f"Found {len(self._mc_instances)} instance(s).")
+        self.log(f"Found {len(self._mc_instances)} instance(s)")
 
     def _reset_hotkey_press(self) -> None:
         current_instance = get_current_mc_instance()
@@ -80,10 +80,10 @@ class EasyMulti:
                      traceback.format_exc().replace("\n", "\\n"))
 
     def _hide_hotkey_press(self) -> None:
-        self.log("Hide key!")
+        pass
 
     def _bg_reset_hotkey_press(self) -> None:
-        self.log("BG Reset key!")
+        pass
 
     def get_instance_infos(self) -> List[InstanceInfo]:
         return [

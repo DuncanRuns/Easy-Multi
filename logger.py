@@ -69,4 +69,4 @@ if __name__ == "__main__":
     logger.log("hello mario", "test")
     logger.log("hello", "test")
     time.sleep(1)
-    logger.log("luigi", "test")
+    logger.log("luigi", "testio")
