@@ -43,17 +43,27 @@ class EasyMulti:
         start_hotkey_checker()
 
     def setup_instances(self) -> None:
+        self.restore_titles()
         self.log("Redetecting Instances...")
         self._mc_instances = get_all_mc_instances()
         for instance in self._mc_instances:
             instance.set_logger(self._logger)
         self.log(f"Found {len(self._mc_instances)} instance(s)")
+        self.set_titles()
 
     def set_titles(self) -> None:
         self.log("Setting titles...")
+        i = 0
+        for instance in self._mc_instances:
+            i += 1
+            if instance.has_window():
+                instance.get_window().set_title(str(i))
 
     def restore_titles(self) -> None:
         self.log("Restoring titles...")
+        for instance in self._mc_instances:
+            if instance.has_window():
+                instance.get_window().revert_title()
 
     def _reset_hotkey_press(self) -> None:
         current_instance = get_current_mc_instance()
