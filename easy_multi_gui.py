@@ -195,7 +195,8 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         self._logger = logger
 
         self._logger.add_callback(self._on_log)
-        self._log_var = tk.StringVar(self, value=" \n " * 9)
+        total_lines = 13
+        self._log_var = tk.StringVar(self, value=" \n " * (total_lines - 1))
 
         self.log("Setting up window...")
         self.title("Easy Multi v" + VERSION)
@@ -254,19 +255,24 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         label.grid(row=0, column=0, padx=3, pady=3, sticky="EWS")
 
     def _init_widgets_control(self, row: int, column: int, rowspan: int = 1, columnspan: int = 1) -> None:
-        control_frame = ttk.LabelFrame(self._main_frame, text="Controls")
-        control_frame.grid(row=row, column=column, rowspan=rowspan, columnspan=columnspan,
-                           padx=5, pady=5, sticky="NEWS")
+        frame = ttk.LabelFrame(self._main_frame, text="Controls")
+        frame.grid(row=row, column=column, rowspan=rowspan, columnspan=columnspan,
+                   padx=5, pady=5, sticky="NEWS")
 
         def gr(widget: tk.Widget, row: int, column: int, rowspan: int = 1, columnspan: int = 1, padx: int = 5, pady: int = 5) -> tk.Widget:  # Grid and return
             widget.grid(row=row, column=column, rowspan=rowspan, columnspan=columnspan,
                         padx=padx, pady=pady, sticky="NEWS")
             return widget
 
-        gr(ttk.Button(control_frame, text="Setup Instances",
+        gr(ttk.Button(frame, text="Setup Instances",
            command=self._setup_instances), 0, 0)
 
-        gr(ttk.Button(control_frame, text="Options...", command=lambda *x: self._open_options()),
+        gr(ttk.Button(frame, text="Set Titles",
+           command=self._easy_multi.set_titles), 1, 0)
+
+        gr(ttk.Button(frame, text="Something idk"), 2, 0)
+
+        gr(ttk.Button(frame, text="Options...", command=lambda *x: self._open_options()),
            100, 0)
 
     def _setup_instances(self) -> None:
