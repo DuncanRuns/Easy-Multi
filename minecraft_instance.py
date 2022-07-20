@@ -39,6 +39,8 @@ class EMMinecraftInstance:
         self._loaded_preview: bool = True
         self._loaded_world: bool = True
 
+        self._last_state_check = time.time()
+
         self._create_world_key = None
         self._fullscreen_key = None
         self._mc_version = None
@@ -135,6 +137,7 @@ class EMMinecraftInstance:
 
     def activate(self, use_fullscreen: bool = False) -> None:
         with self._reset_lock:
+            self.ensure_window_state()
 
             if self._window is not None and self._window.exists():
                 self._window.activate()
@@ -151,27 +154,35 @@ class EMMinecraftInstance:
 
             self.log("Activated")
 
-    def tick(self, window_pos=(0, 0), window_size=(1920, 1080), is_active: bool = True) -> None:
+    def ensure_window_state(self) -> None:
+        # Ensure not minimized
+        if self._window.is_minimized():
+            self.log("Unminimizing...")
+            self._window.show()
+            if self._window.is_fullscreen():
+                self._window.press_key(self._get_fullscreen_key())
+            time.sleep(0.1)
+
+        # Ensure borderless
+        if self._options["use_borderless"] and not self._window.is_borderless():
+            self._window.show()
+            time.sleep(0.05)
+            self._window.go_borderless()
+            self._window.move(
+                self._options["screen_location"], self._options["screen_size"])
+            time.sleep(0.1)
+
+        self._last_state_check = time.time()
+
+    def tick(self, is_active: bool = True) -> None:
         if self._tick_lock.locked():
             # Cancel tick if already being ran
             return
 
         with self._tick_lock:
             if self.has_window():
-
-                if self._window.is_minimized():
-                    self.log("Unminimizing...")
-                    self._window.show()
-                    if self._window.is_fullscreen():
-                        self._window.press_key(self._get_fullscreen_key())
-
-                # Ensure borderless
-                if self._options["use_borderless"] and not self._window.is_borderless():
-                    self._window.show()
-                    time.sleep(0.05)
-                    self._window.go_borderless()
-                    self._window.move(window_pos, window_size)
-
+                if abs(time.time() - self._last_state_check) > 2:
+                    self.ensure_window_state()
                 # Log Reader
                 if (not self._loaded_preview) or (not self._loaded_world):
                     self._process_plans(is_active)

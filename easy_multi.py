@@ -49,6 +49,12 @@ class EasyMulti:
             instance.set_logger(self._logger)
         self.log(f"Found {len(self._mc_instances)} instance(s)")
 
+    def set_titles(self) -> None:
+        self.log("Setting titles...")
+
+    def restore_titles(self) -> None:
+        self.log("Restoring titles...")
+
     def _reset_hotkey_press(self) -> None:
         current_instance = get_current_mc_instance()
         try:
@@ -101,8 +107,7 @@ class EasyMulti:
             if len(self._mc_instances) == 1:
                 active_instance = self._mc_instances[0]
             for instance in self._mc_instances:
-                instance.tick(
-                    self._options["screen_location"], self._options["screen_size"], instance == active_instance)
+                instance.tick(instance == active_instance)
 
 
 if __name__ == "__main__":
