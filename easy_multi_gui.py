@@ -44,22 +44,32 @@ class OptionsMenu(tk.Toplevel):
         self._init_widgets()
 
     def _init_widgets(self) -> None:
-        self._init_widgets_left()
-        self._init_widgets_right()
+        frame = ttk.LabelFrame(self._main_frame, text="Resetting")
+        frame.grid(row=0, column=0, sticky="NEWS", padx=5, pady=5)
+        self._init_widgets_reset(frame)
 
-    def _init_widgets_left(self) -> None:
-        frame = ttk.Frame(self._main_frame)
-        frame.grid(row=0, column=0, sticky="NW", padx=5, pady=5)
+        frame = ttk.LabelFrame(self._main_frame, text="Window")
+        frame.grid(row=0, column=10, sticky="NEWS", padx=5, pady=5)
+        self._init_widgets_window(frame)
 
+        frame = ttk.LabelFrame(self._main_frame, text="Automatic Hiding")
+        frame.grid(row=10, column=0, sticky="NEWS", padx=5, pady=5)
+        self._init_widgets_hiding(frame)
+
+        frame = ttk.LabelFrame(self._main_frame, text="Hotkeys")
+        frame.grid(row=10, column=10, sticky="NEWS", padx=5, pady=5)
+        self._init_widgets_hotkeys(frame)
+
+    def _init_widgets_reset(self, frame: ttk.Frame) -> None:
         var = tk.BooleanVar(self)
         self._options.set_option_wrapper("pause_on_load", var)
-        ttk.Checkbutton(frame, text="Pause on Load",
-                        variable=var).pack(padx=5, pady=5, anchor="w")
+        ttk.Checkbutton(frame, text="Pause on Load", variable=var).pack(
+            padx=5, pady=5, anchor="w")
 
         var = tk.BooleanVar(self)
         self._options.set_option_wrapper("use_f3", var)
-        ttk.Checkbutton(frame, text="Use F3",
-                        variable=var).pack(padx=5, pady=5, anchor="w")
+        ttk.Checkbutton(frame, text="Use F3", variable=var).pack(
+            padx=5, pady=5, anchor="w")
 
         var = tk.BooleanVar(self)
         self._options.set_option_wrapper("auto_clear_worlds", var)
@@ -74,19 +84,25 @@ class OptionsMenu(tk.Toplevel):
         ttk.Label(clipboard_frame, text="Clipboard on Reset:").pack(anchor="w")
         ttk.Entry(clipboard_frame, textvariable=var).pack(anchor="w")
 
-    def _init_widgets_right(self) -> None:
-        frame = ttk.Frame(self._main_frame)
-        frame.grid(row=0, column=1, sticky="NW", padx=5, pady=5)
-
+    def _init_widgets_window(self, frame: ttk.Frame) -> None:
         var = tk.BooleanVar(self)
         self._options.set_option_wrapper("use_fullscreen", var)
-        ttk.Checkbutton(frame, text="Use Fullscreen",
-                        variable=var).pack(padx=5, pady=5, anchor="w")
+        ttk.Checkbutton(frame, text="Use Fullscreen (not recommended)", variable=var).pack(
+            padx=5, pady=5, anchor="w")
 
         var = tk.BooleanVar(self)
         self._options.set_option_wrapper("use_borderless", var)
-        ttk.Checkbutton(frame, text="Use Borderless",
-                        variable=var).pack(padx=5, pady=5, anchor="w")
+        ttk.Checkbutton(frame, text="Use Borderless", variable=var).pack(
+            padx=5, pady=5, anchor="w")
+
+    def _init_widgets_hiding(self, frame: ttk.Frame) -> None:
+        var = tk.BooleanVar(self)
+        self._options.set_option_wrapper("auto_hide", var)
+        ttk.Checkbutton(frame, text="Auto Hide", variable=var).pack(
+            padx=5, pady=5, anchor="w")
+
+    def _init_widgets_hotkeys(self, frame: ttk.Frame) -> None:
+        pass
 
 
 class EasyMultiGUI(ttkthemes.ThemedTk):
@@ -156,7 +172,7 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
                         padx=padx, pady=pady, sticky="NEWS")
             return widget
 
-        gr(ttk.Button(control_frame, text="Setup Instaces",
+        gr(ttk.Button(control_frame, text="Setup Instances",
            command=self._setup_instances), 0, 0)
 
         gr(ttk.Button(control_frame, text="Options...", command=lambda *x: self._open_options()),
@@ -173,7 +189,7 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         self._options_menu.focus()
 
     def log(self, line: str) -> None:
-        self._logger.log(line, "EasyMultiGUI")
+        self._logger.log(line, "EasyMulti")
 
     def _on_log(self, line: str) -> None:
         lines = self._log_var.get().splitlines()

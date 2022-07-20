@@ -4,15 +4,15 @@ from basic_options import BasicOptions
 
 class EasyMultiOptions(BasicOptions):
     def set_defaults(self) -> None:
+        # Reset
         self.pause_on_load = True
         self.use_f3 = True
-
         self.auto_clear_worlds = True
         self.clipboard_on_reset = ""
 
+        # Window
         self.use_fullscreen = False
         self.use_borderless = False
-
         self.screen_location = [0, 0]
         self.screen_size = [1920, 1080]
 
