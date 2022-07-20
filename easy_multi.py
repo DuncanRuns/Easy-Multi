@@ -22,22 +22,24 @@ class EasyMulti:
         self._options = get_options_instance()
         self._logger = logger
 
-        self._update_hotkeys()
+        self.update_hotkeys()
 
         self.log("Initialized")
 
     def log(self, line: str) -> None:
         self._logger.log(line, "EasyMulti")
 
-    def _update_hotkeys(self) -> None:
+    def update_hotkeys(self) -> None:
         clear_and_stop_hotkey_checker()
-        register_hotkey(self._options["reset_hotkey"],
-                        self._reset_hotkey_press)
-        register_hotkey(self._options["hide_hotkey"],
-                        self._hide_hotkey_press)
-        register_hotkey(self._options["bg_reset_hotkey"],
-                        self._bg_reset_hotkey_press)
-
+        if len(self._options["reset_hotkey"]) > 0:
+            register_hotkey(self._options["reset_hotkey"],
+                            self._reset_hotkey_press)
+        if len(self._options["hide_hotkey"]) > 0:
+            register_hotkey(self._options["hide_hotkey"],
+                            self._hide_hotkey_press)
+        if len(self._options["bg_reset_hotkey"]) > 0:
+            register_hotkey(self._options["bg_reset_hotkey"],
+                            self._bg_reset_hotkey_press)
         start_hotkey_checker()
 
     def setup_instances(self) -> None:
@@ -50,8 +52,6 @@ class EasyMulti:
     def _reset_hotkey_press(self) -> None:
         current_instance = get_current_mc_instance()
         try:
-
-            # this looks weird but checks that current_instance is not None
             if current_instance and current_instance in self._mc_instances:
                 already_reset = False
                 if self._options["use_fullscreen"]:

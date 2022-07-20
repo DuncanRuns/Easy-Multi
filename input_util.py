@@ -53,7 +53,7 @@ def is_pressed(ghk_name: str):
     return win32api.GetAsyncKeyState(vk_key_names[ghk_name]) < 0
 
 
-def read_hotkey(should_continue_callback: Callable = None) -> List[str]:
+def read_hotkey(should_continue_callback: Callable[[], bool] = None) -> List[str]:
     found_key = ""
     while found_key == "" and (should_continue_callback is None or should_continue_callback()):
         time.sleep(0.01)
