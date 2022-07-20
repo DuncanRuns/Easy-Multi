@@ -181,7 +181,7 @@ class EMMinecraftInstance:
 
         with self._tick_lock:
             if self.has_window():
-                if abs(time.time() - self._last_state_check) > 2:
+                if abs(time.time() - self._last_state_check) > 0.5:
                     self.ensure_window_state()
                 # Log Reader
                 if (not self._loaded_preview) or (not self._loaded_world):
