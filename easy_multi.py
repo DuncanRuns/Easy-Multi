@@ -21,6 +21,7 @@ class EasyMulti:
 
         self._options = get_options_instance()
         self._logger = logger
+
         self._has_hidden = False
 
         self._mc_instances: List[EMMinecraftInstance] = [
@@ -33,6 +34,10 @@ class EasyMulti:
         self.update_hotkeys()
 
         self.log("Initialized")
+
+    def _refresh_auto_hide_time(self) -> None:
+        self._auto_hide_point = time.time(
+        ) + (60 * self._options["auto_hide_time"])
 
     def log(self, line: str) -> None:
         self._logger.log(line, "Easy Multi")
@@ -119,20 +124,25 @@ class EasyMulti:
 
                 if self._has_hidden:
                     self._has_hidden = False
-                    for inst in self._mc_instances:
-                        inst.get_window().move(
+                    for instance in self._mc_instances:
+                        instance.get_window().move(
                             self._options["screen_location"], self._options["screen_size"])
-
-                press_keys_for_time()
+                        if instance != current_instance:
+                            instance.reset()
 
                 if self._options["clipboard_on_reset"] != "":
                     clipboard.copy(self._options["clipboard_on_reset"])
+
+            self._refresh_auto_hide_time()
 
         except:
             self.log("Error during reset: " +
                      traceback.format_exc().replace("\n", "\\n"))
 
     def _hide_hotkey_press(self) -> None:
+        self._hide_other_instances()
+
+    def _hide_other_instances(self) -> None:
         if not self._has_hidden:
             try:
                 current_instance = get_current_mc_instance()
@@ -141,6 +151,7 @@ class EasyMulti:
                     for instance in self._mc_instances:
                         if instance != current_instance and instance.has_window(False):
                             instance.get_window().tiny()
+                self._refresh_auto_hide_time()
             except Exception:
                 self.log("Error during hiding: " +
                          traceback.format_exc().replace("\n", "\\n"))
@@ -153,6 +164,7 @@ class EasyMulti:
                     for instance in self._mc_instances:
                         if instance != current_instance and instance.has_window(False):
                             instance.reset()
+                self._refresh_auto_hide_time()
             except Exception:
                 self.log("Error during reset: " +
                          traceback.format_exc().replace("\n", "\\n"))
@@ -181,10 +193,19 @@ class EasyMulti:
             return
         with self._tick_lock:
             active_instance = get_current_mc_instance()
-            if len(self._mc_instances) == 1:
-                active_instance = self._mc_instances[0]
+            if active_instance not in self._mc_instances:
+                active_instance = None
+
+            # Instance ticking
             for instance in self._mc_instances:
-                instance.tick(instance == active_instance)
+                instance.tick(
+                    (instance == active_instance) if active_instance else False)
+
+            # Auto Hiding
+            if active_instance is None:
+                self._refresh_auto_hide_time()
+            if self._options["auto_hide"] and time.time() > self._auto_hide_point:
+                self._hide_other_instances()
 
 
 if __name__ == "__main__":

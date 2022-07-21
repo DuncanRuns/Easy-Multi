@@ -22,13 +22,11 @@ def main():
             pass
         emg.on_close()
         options.save_file(opt_path)
-        for thread in threading.enumerate():
-            # If a hotkey checker thread is running, I cannot quit for some reason, so here's a janky force close solution.
-            print("Thread:", thread)
-            if "_hotkey_set_thread" in str(thread):
-                time.sleep(1)  # Wait in case something else is running...
-                print("Force exiting...")
-                os._exit(0)
+        if len(threading.enumerate()) > 2:
+            print("Threads:", threading.enumerate())
+            time.sleep(1)  # Wait in case something else is running...
+            print("Force exiting...")
+            os._exit(0)
     except:
         error = traceback.format_exc()
         print(error)
