@@ -1,6 +1,6 @@
 import threading, traceback, clipboard
 from logger import Logger
-from minecraft_instance import EMMinecraftInstance, get_all_mc_instances, get_current_mc_instance
+from minecraft_instance import EMMinecraftInstance, get_all_mc_instances, get_current_mc_instance, get_instance_from_dir
 from easy_multi_options import get_options_instance
 from input_util import *
 
@@ -17,17 +17,23 @@ class InstanceInfo:
 class EasyMulti:
     def __init__(self, logger: Logger) -> None:
         self._tick_lock = threading.Lock()
-        self._mc_instances: List[EMMinecraftInstance] = []
 
         self._options = get_options_instance()
         self._logger = logger
+
+        self._mc_instances: List[EMMinecraftInstance] = [
+            get_instance_from_dir(i) for i in self._options["last_instances"]]
+        if len(self._mc_instances) > 0:
+            self.set_titles()
+        for instance in self._mc_instances:
+            instance.set_logger(logger)
 
         self.update_hotkeys()
 
         self.log("Initialized")
 
     def log(self, line: str) -> None:
-        self._logger.log(line, "EasyMulti")
+        self._logger.log(line, "Easy Multi")
 
     def update_hotkeys(self) -> None:
         clear_and_stop_hotkey_checker()
@@ -50,6 +56,8 @@ class EasyMulti:
             instance.set_logger(self._logger)
         self.log(f"Found {len(self._mc_instances)} instance(s)")
         self.set_titles()
+        self._options["last_instances"] = [
+            i.get_game_dir() for i in self._mc_instances]
 
     def set_titles(self) -> None:
         self.log("Setting titles...")
@@ -72,7 +80,7 @@ class EasyMulti:
                 already_reset = False
                 if self._options["use_fullscreen"]:
                     already_reset = True
-                    current_instance.reset(len(self._mc_instances) == 1)
+                    current_instance.reset(True, len(self._mc_instances) == 1)
                     time.sleep(0.05)
 
                 next_ind = self._mc_instances.index(current_instance) + 1
@@ -80,13 +88,12 @@ class EasyMulti:
                     next_ind = 0
                 next_instance = self._mc_instances[next_ind]
                 if next_instance.has_window(True):
-                    self._mc_instances[next_ind].activate(
-                        self._options["use_fullscreen"])
+                    self._mc_instances[next_ind].activate()
                 else:
                     self.log(f"Missing window for {next_instance.get_name()}")
 
                 if not already_reset:
-                    current_instance.reset(len(self._mc_instances) == 1)
+                    current_instance.reset(True, len(self._mc_instances) == 1)
 
                 if self._options["clipboard_on_reset"] != "":
                     clipboard.copy(self._options["clipboard_on_reset"])

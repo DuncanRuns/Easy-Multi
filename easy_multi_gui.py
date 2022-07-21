@@ -189,6 +189,8 @@ class OptionsMenu(tk.Toplevel):
 
 class EasyMultiGUI(ttkthemes.ThemedTk):
     def __init__(self, logger: Logger) -> None:
+        self._running = False
+        self._closed = False
         ttkthemes.ThemedTk.__init__(self, theme="breeze")
 
         self._em_options = get_options_instance()
@@ -221,8 +223,6 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         self.log("Welcome to Easy Multi v" + VERSION)
         self.after(50, self._loop)
 
-        self._running = False
-
     def _loop(self) -> None:
         threading.Thread(target=self._easy_multi.tick).start()
         self.after(50, self._loop)
@@ -231,6 +231,15 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         self._running = True
         super().mainloop()
         self._running = False
+        self.on_close()
+
+    def on_close(self) -> None:
+        self._closed = True
+        input_util.clear_and_stop_hotkey_checker()
+        self._easy_multi.restore_titles()
+        time.sleep(0.1)
+        self._logger.wait_for_file_write()
+        time.sleep(0.1)
 
     def is_running(self) -> None:
         return self._running
@@ -270,8 +279,6 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         gr(ttk.Button(frame, text="Set Titles",
            command=self._easy_multi.set_titles), 1, 0)
 
-        gr(ttk.Button(frame, text="Something idk"), 2, 0)
-
         gr(ttk.Button(frame, text="Options...", command=lambda *x: self._open_options()),
            100, 0)
 
@@ -289,20 +296,21 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         self._easy_multi.update_hotkeys()
 
     def log(self, line: str) -> None:
-        self._logger.log(line, "EasyMulti")
+        self._logger.log(line, "Easy Multi")
 
     def _on_log(self, from_log: str) -> None:
-        lines = [(" " if i == " " else i) for i in [j.strip()
-                                                    for j in self._log_var.get().splitlines()]]
-        new_lines = [(" " if i == " " else i)
-                     for i in [j.strip() for j in from_log.splitlines()]]
-        for i in range(len(new_lines)):
-            lines.pop(0)
-        lines.extend(new_lines)
-        out = ""
-        for line in lines:
-            out += line + "\n"
-        self._log_var.set(out.rstrip())
+        if not self._closed:
+            lines = [(" " if i == " " else i) for i in [j.strip()
+                                                        for j in self._log_var.get().splitlines()]]
+            new_lines = [(" " if i == " " else i)
+                         for i in [j.strip() for j in from_log.splitlines()]]
+            for i in range(len(new_lines)):
+                lines.pop(0)
+            lines.extend(new_lines)
+            out = ""
+            for line in lines:
+                out += line + "\n"
+            self._log_var.set(out.rstrip())
 
 
 if __name__ == "__main__":

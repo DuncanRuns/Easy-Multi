@@ -16,10 +16,9 @@ def main():
         options = get_options_instance().try_load_file(opt_path)
         logger = Logger()
         logger.add_callback(print)
-        ema = EasyMultiGUI(logger)
-        ema.mainloop()
+        emg = EasyMultiGUI(logger)
+        emg.mainloop()
         options.save_file(opt_path)
-        clear_and_stop_hotkey_checker()
         print("Force exiting...")
         os._exit(0)
     except:

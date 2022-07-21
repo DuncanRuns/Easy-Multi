@@ -40,6 +40,7 @@ class EMMinecraftInstance:
         self._loaded_world: bool = True
 
         self._last_state_check = time.time()
+        self._last_world_clear = time.time()
 
         self._create_world_key = None
         self._fullscreen_key = None
@@ -54,8 +55,7 @@ class EMMinecraftInstance:
             self._log_progress = _mc_instance_cache[_mc_instance_cache.index(
                 self)]._log_progress
         else:
-            with open(self.get_log_path(), "rb") as f:
-                self._log_progress = len(f.read())
+            self.jump_log_progress()
 
     def log(self, line: str) -> None:
         self._logger.log(line, self.get_name())
@@ -108,17 +108,25 @@ class EMMinecraftInstance:
         self._mc_version = self._window.get_mc_version()
         return self._mc_version
 
-    def reset(self, single_instance: bool = False) -> None:
+    def reset(self, is_full: bool = False, single_instance: bool = False):
+        func = self._full_reset if is_full else self._send_reset
+        threading.Thread(target=func, args=(single_instance,)).start()
+
+    def _full_reset(self, single_instance: bool = False) -> None:
         with self._reset_lock:
             self.log("Resetting...")
-            self.get_next_log_lines()
-            if self._window is None or not self._window.exists():
+
+            if not self.has_window(True):
                 self.log("No window opened yet...")
                 return
 
             if self._window.is_fullscreen():
                 self._window.press_key(self._get_fullscreen_key())
 
+        self._send_reset(single_instance)
+
+    def _send_reset(self, single_instance: bool = False) -> None:
+        with self._reset_lock:
             if self._get_mc_version()[1] < 14:
                 self._window.press_reset_keys()
             else:
@@ -131,11 +139,10 @@ class EMMinecraftInstance:
 
             self._loaded_preview = self._get_mc_version()[1] < 14
             self._loaded_world = False
+            time.sleep(0.1)
+            self.jump_log_progress()
 
-            if self._options["auto_clear_worlds"]:
-                threading.Thread(target=self.clear_worlds).start()
-
-    def activate(self, use_fullscreen: bool = False) -> None:
+    def activate(self) -> None:
         with self._reset_lock:
             self.ensure_window_state()
 
@@ -143,7 +150,7 @@ class EMMinecraftInstance:
                 self._window.activate()
 
             if self._pause_on_load and self._loaded_world:
-                if use_fullscreen:
+                if self._options["use_fullscreen"]:
                     self._window.press_key(self._get_fullscreen_key())
 
                 # Magic Number :((( Without this, the mouse does not get locked into MC
@@ -183,6 +190,9 @@ class EMMinecraftInstance:
             if self.has_window():
                 if abs(time.time() - self._last_state_check) > 0.5:
                     self.ensure_window_state()
+                if self._options["auto_clear_worlds"] and abs(time.time() - self._last_world_clear) > 20:
+                    self._last_world_clear = time.time()
+                    threading.Thread(target=self.clear_worlds).start()
                 # Log Reader
                 if (not self._loaded_preview) or (not self._loaded_world):
                     self._process_plans(is_active)
@@ -223,6 +233,11 @@ class EMMinecraftInstance:
             while "" in line_list:
                 line_list.remove("")
             return line_list
+
+    def jump_log_progress(self) -> None:
+        with self._log_lock:
+            with open(self.get_log_path(), "rb") as f:
+                self._log_progress = len(f.read())
 
     def get_log_path(self) -> str:
         return os.path.join(self._game_dir, "logs", "latest.log")
@@ -306,6 +321,15 @@ def get_current_mc_instance() -> Union[EMMinecraftInstance, None]:
         r"^Minecraft\*? 1\.[1-9]\d*(\.[1-9]\d*)?( .*)?$").match
     if mc_match(instance.get_window().get_original_title()):
         return instance
+
+
+def get_instance_from_dir(game_dir: str) -> EMMinecraftInstance:
+    instance = EMMinecraftInstance(game_dir=game_dir)
+    if instance in _mc_instance_cache:
+        instance = _mc_instance_cache[_mc_instance_cache.index(instance)]
+    else:
+        _mc_instance_cache.append(instance)
+    return instance
 
 
 if __name__ == "__main__":

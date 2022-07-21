@@ -30,6 +30,9 @@ class EasyMultiOptions(BasicOptions):
         self.hide_hotkey = ["p"]
         self.bg_reset_hotkey = ["["]
 
+        # Hidden
+        self.last_instances = []
+
 
 INSTANCE = EasyMultiOptions()
 

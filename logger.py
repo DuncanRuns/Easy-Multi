@@ -30,6 +30,10 @@ class Logger:
             for callback in self._callbacks:
                 callback(line)
 
+    def wait_for_file_write(self) -> None:
+        with self._log_lock:
+            pass
+
 
 class PrintLogger(Logger):
     """Logger which defaults to printing the log rather than outputting to a file.
