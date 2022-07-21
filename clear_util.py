@@ -4,21 +4,21 @@ import os, re, shutil
 from typing import Callable, List
 
 
-_rspeedrun_match = re.compile(r"^RandomSpeedrun #\d+$").match
-_sspeedrun_match = re.compile(r"^SetSpeedrun #\d+$").match
+_rspeedrun_match = re.compile(r"^Random ?Speedrun #\d+( \(\d+\))?$").match
+_sspeedrun_match = re.compile(r"^Set ?Speedrun #\d+( \(\d+\))?$").match
 _nworld_match = re.compile(r"^New World( \(\d+\))?$").match
 
 _world_match_list = [_rspeedrun_match, _sspeedrun_match, _nworld_match]
 
 
-def _matches_one(match_list: List[Callable], string: str) -> bool:
+def _matches_one(match_list: List[Callable[[str], bool]], string: str) -> bool:
     for match in match_list:
         if match(string):
             return True
     return False
 
 
-def _get_all_matches(match_list: List[Callable], names: List[str]) -> List[str]:
+def _get_all_matches(match_list: List[Callable[[str], bool]], names: List[str]) -> List[str]:
     good_names = []
     for name in names:
         if _matches_one(match_list, name):

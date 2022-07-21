@@ -39,8 +39,10 @@ class EMMinecraftInstance:
         self._loaded_preview: bool = True
         self._loaded_world: bool = True
 
-        self._last_state_check = time.time()
-        self._last_world_clear = time.time()
+        self._last_state_check = 0
+        self._last_world_clear = 0
+
+        self._time_of_last_activity = 0
 
         self._create_world_key = None
         self._fullscreen_key = None
@@ -116,7 +118,6 @@ class EMMinecraftInstance:
 
     def _full_reset(self, single_instance: bool = False) -> None:
         with self._reset_lock:
-            self.log("Resetting...")
 
             if not self.has_window(True):
                 self.log("No window opened yet...")
@@ -129,6 +130,7 @@ class EMMinecraftInstance:
 
     def _send_reset(self, single_instance: bool = False) -> None:
         with self._reset_lock:
+            self.log("Resetting...")
             if self._get_mc_version()[1] < 14:
                 self._window.press_reset_keys()
             else:
@@ -151,7 +153,7 @@ class EMMinecraftInstance:
             if self._window is not None and self._window.exists():
                 self._window.activate()
 
-            if self._pause_on_load and self._loaded_world:
+            if self._loaded_world:
                 if self._options["use_fullscreen"]:
                     self._window.press_key(self._get_fullscreen_key())
 
@@ -202,30 +204,29 @@ class EMMinecraftInstance:
                     threading.Thread(target=self.clear_worlds).start()
                 # Log Reader
                 if (not self._loaded_preview) or (not self._loaded_world):
-                    self._process_plans(is_active)
+                    self._time_of_last_activity = time.time()
+                if abs(time.time() - self._time_of_last_activity) < 2:
+                    self._process_logs(is_active)
 
-    def _process_plans(self, is_active: bool = True) -> None:
+    def _process_logs(self, is_active: bool = True) -> None:
         new_log_lines = self.get_next_log_lines()
-        if not self._loaded_preview:
-            for line in new_log_lines:
-                if _match_view_start(line):
-                    self._loaded_preview = True
-                    self._loaded_world = False
+        for line in new_log_lines:
+            if _match_view_start(line):
+                self._loaded_preview = True
+                self._loaded_world = False
+                if self._options["use_f3"]:
+                    self._window.press_f3_esc()
+                break
+            elif not self._loaded_world and _match_world_load(line):
+                self._loaded_world = True
+                if self._pause_on_load:
                     if self._options["use_f3"]:
                         self._window.press_f3_esc()
-                    break
-        if not self._loaded_world:
-            for line in new_log_lines:
-                if _match_world_load(line):
-                    self._loaded_world = True
-                    if self._pause_on_load:
-                        if self._options["use_f3"]:
-                            self._window.press_f3_esc()
-                        else:
-                            self._window.press_esc()
-                    if is_active and self._options["use_fullscreen"] and (not self._window.is_fullscreen()):
-                        self._window.press_key(self._get_fullscreen_key())
-                    break
+                    else:
+                        self._window.press_esc()
+                if is_active and self._options["use_fullscreen"] and (not self._window.is_fullscreen()):
+                    self._window.press_key(self._get_fullscreen_key())
+                break
 
     def get_next_log_lines(self) -> List[str]:
         with self._log_lock:

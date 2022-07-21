@@ -1,6 +1,7 @@
 import webbrowser
 import ttkthemes, threading, os, input_util, time
 import tkinter as tk
+import tkinter.messagebox as tkMessageBox
 from typing import Callable, List
 from tkinter import ttk
 from easy_multi import EasyMulti, VERSION, InstanceInfo
@@ -18,11 +19,14 @@ def resource_path(relative_path):
 
 
 class SingleInstanceDisplay(ttk.Frame):
-    def __init__(self, parent: tk.Widget, display_num: int, remove_callback: Callable[[int], None]):
+    def __init__(self, parent: tk.Widget, display_num: int, remove_callback: Callable[[int], None], easy_multi: EasyMulti):
         ttk.Frame.__init__(self, parent, borderwidth=1, relief="ridge")
-        self.display_num = display_num
+
+        self._display_num = display_num
         self._game_dir = "C:/"
         self._remove_callback = remove_callback
+        self._easy_multi = easy_multi
+
         frame = ttk.Frame(self)
         frame.pack(padx=5, pady=5)
         self._name_label = ttk.Label(
@@ -34,14 +38,20 @@ class SingleInstanceDisplay(ttk.Frame):
 
         for binder in [self, self._name_label, self._status_label]:
             binder.bind("<Button-1>", self._left_click)
-            binder.bind("<Button-2>", self._alt_click)
-            binder.bind("<Button-3>", self._alt_click)
+            binder.bind("<Button-2>", self._middle_click)
+            binder.bind("<Button-3>", self._right_click)
 
     def _left_click(self, event) -> None:
-        webbrowser.open(self._game_dir)
+        if input_util.is_pressed("shift"):
+            webbrowser.open(self._game_dir)
+        else:
+            self._easy_multi.activate_instance(self._display_num)
 
-    def _alt_click(self, event) -> None:
-        self._remove_callback(self.display_num)
+    def _middle_click(self, event) -> None:
+        self._remove_callback(self._display_num)
+
+    def _right_click(self, event) -> None:
+        self._easy_multi.reset_instance(self._display_num)
 
     def update_info(self, info: InstanceInfo):
         self._name_label.config(
@@ -56,19 +66,20 @@ class SingleInstanceDisplay(ttk.Frame):
 
 
 class FullInstancesDisplay(ttk.LabelFrame):
-    def __init__(self, parent: tk.Widget, remove_callback: Callable[[int], None], get_infos_callback: Callable[[None], List[InstanceInfo]]) -> None:
+    def __init__(self, parent: tk.Widget, easy_multi: EasyMulti) -> None:
         ttk.LabelFrame.__init__(self, parent, text="Instances")
-        self._remove_callback = remove_callback
-        self._get_infos_callback = get_infos_callback
+        self._easy_multi = easy_multi
 
-        ttk.Label(self, text="Left click to open directory", anchor=tk.CENTER).grid(
-            row=0, column=1, sticky="NEWS")
-        ttk.Label(self, text="Right click to remove instance", anchor=tk.CENTER).grid(
-            row=1, column=1, sticky="NEWS")
-        ttk.Label(self, text=" ", anchor=tk.CENTER, width=22).grid(
-            row=1, column=0, sticky="NEWS")
-        ttk.Label(self, text=" ", anchor=tk.CENTER, width=22).grid(
-            row=1, column=2, sticky="NEWS")
+        controls_button = ttk.Label(
+            self, text="Controls", anchor=tk.CENTER, foreground="blue", width=22)
+        controls_button.config(
+            font=str(controls_button['font']) + " underline")
+        controls_button.bind("<Button>", lambda event: tkMessageBox.showinfo(
+            "Easy Multi Instance Controls", "Left Click: Activate (open) instance\nMiddle Click: Remove instance\nRight Click: Reset instance\n\nShift + Left Click: Open instance's game directory"))
+        controls_button.grid(row=0, column=1, sticky="NEWS", padx=5)
+
+        for i in [0, 2]:
+            ttk.Label(self, text=" ", width=22).grid(row=0, column=i)
 
         for i in range(3):
             self.grid_columnconfigure(i, weight=1)
@@ -77,8 +88,8 @@ class FullInstancesDisplay(ttk.LabelFrame):
         self.after(0, self._loop)
 
     def _loop(self) -> None:
-        self.after(2000, self._loop)
-        self.update_infos(self._get_infos_callback())
+        self.after(600, self._loop)
+        self.update_infos(self._easy_multi.get_instance_infos())
 
     def update_infos(self, infos: List[InstanceInfo]) -> None:
         if len(infos) != len(self._displays):
@@ -86,11 +97,11 @@ class FullInstancesDisplay(ttk.LabelFrame):
                 display.grid_remove()
 
             def on_remove(display_num: int) -> None:
-                self._remove_callback(display_num)
-                self.update_infos(self._get_infos_callback())
+                self._easy_multi.remove_instance(display_num)
+                self.update_infos(self._easy_multi.get_instance_infos())
 
             self._displays = [
-                SingleInstanceDisplay(self, i, on_remove) for i in range(len(infos))]
+                SingleInstanceDisplay(self, i, on_remove, self._easy_multi) for i in range(len(infos))]
             self._grid_all_displays()
 
         for i in range(len(infos)):
@@ -139,9 +150,10 @@ class HotkeyWidget(ttk.Frame):
         threading.Thread(target=self._hotkey_set_thread).start()
 
     def _is_button_focused(self) -> bool:
-        focused = self.focus_get()
-        if focused and focused == self._button:
-            return True
+        if self._is_running():
+            focused = self.focus_get()
+            if focused and focused == self._button:
+                return True
         return False
 
     def _hotkey_set_thread(self) -> None:
@@ -208,6 +220,10 @@ class OptionsMenu(tk.Toplevel):
         frame.grid(row=10, column=10, sticky="NEWS", padx=5, pady=5)
         self._init_widgets_hiding(frame)
 
+        frame = ttk.LabelFrame(self._main_frame, text="OBS")
+        frame.grid(row=20, column=0, sticky="NEWS", padx=5, pady=5)
+        self._init_widgets_obs(frame)
+
     def _init_widgets_reset(self, frame: ttk.Frame) -> None:
         var = tk.BooleanVar(self)
         self._em_options.set_option_wrapper("pause_on_load", var)
@@ -235,12 +251,15 @@ class OptionsMenu(tk.Toplevel):
     def _init_widgets_window(self, frame: ttk.Frame) -> None:
         var = tk.BooleanVar(self)
         self._em_options.set_option_wrapper("use_fullscreen", var)
-        ttk.Checkbutton(frame, text="Use Fullscreen (not recommended)", variable=var).pack(
+        ttk.Checkbutton(frame, text="Use Fullscreen (not recommended)", variable=var, state=tk.DISABLED).pack(
             padx=5, pady=5, anchor="w")
 
         var = tk.BooleanVar(self)
         self._em_options.set_option_wrapper("use_borderless", var)
         ttk.Checkbutton(frame, text="Use Borderless", variable=var).pack(
+            padx=5, pady=5, anchor="w")
+
+        ttk.Label(frame, text="Position & Size Customization Soon™").pack(
             padx=5, pady=5, anchor="w")
 
     def _init_widgets_hiding(self, frame: ttk.Frame) -> None:
@@ -274,6 +293,22 @@ class OptionsMenu(tk.Toplevel):
                      self.log, self._master.on_hotkey_change, self._master.is_running).pack(padx=5, pady=5, anchor="w")
         HotkeyWidget(frame, "bg_reset_hotkey", self._em_options, "Background Reset",
                      self.log, self._master.on_hotkey_change, self._master.is_running).pack(padx=5, pady=5, anchor="w")
+
+    def _init_widgets_obs(self, frame: ttk.Frame) -> None:
+        var = tk.BooleanVar(self)
+        self._em_options.set_option_wrapper("obs_press_hotkey", var)
+        ttk.Checkbutton(frame, text="Press Hotkey", variable=var).pack(
+            padx=5, pady=5, anchor="w")
+
+        var = tk.BooleanVar(self)
+        self._em_options.set_option_wrapper("obs_use_numpad", var)
+        ttk.Checkbutton(frame, text="Use Numpad", variable=var).pack(
+            padx=5, pady=5, anchor="w")
+
+        var = tk.BooleanVar(self)
+        self._em_options.set_option_wrapper("obs_use_alt", var)
+        ttk.Checkbutton(frame, text="Use Alt", variable=var).pack(
+            padx=5, pady=5, anchor="w")
 
 
 class EasyMultiGUI(ttkthemes.ThemedTk):
@@ -337,7 +372,7 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         self._init_widgets_log(0, 0)
         self._init_widgets_control(0, 1)
         self._instances_display = FullInstancesDisplay(
-            self._main_frame, self._easy_multi.remove_instance, self._easy_multi.get_instance_infos)
+            self._main_frame, self._easy_multi)
         self._instances_display.grid(
             row=1, column=0, columnspan=2, padx=5, pady=5, sticky="NEWS")
         self._main_frame.grid_rowconfigure(1, minsize=50)
@@ -392,9 +427,9 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
                                                        for j in self._log_text.splitlines()]]
             new_lines = [(" " if i == "" else i)
                          for i in [j.strip() for j in from_log.splitlines()]]
-            for i in range(len(new_lines)):
+            for line in new_lines:
                 lines.pop(0)
-            lines.extend(new_lines)
+                lines.append(line)
             out = ""
             for line in lines:
                 out += line + "\n"

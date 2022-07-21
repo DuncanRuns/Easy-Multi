@@ -216,13 +216,17 @@ def take_arg(string: str, ind: int) -> str:
         return sub[:scan_ind]
 
 
+def get_command_line(pid: int) -> Union[str, None]:
+    cmd = f"powershell.exe \"$proc = Get-WmiObject Win32_Process -Filter \\\"ProcessId = {str(pid)}\\\";$proc.CommandLine\""
+    p = subprocess.Popen(
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    return p.communicate()[0].decode()
+
+
 def get_mc_dir(pid: int) -> Union[str, None]:
     # Thanks to the creator of MoveWorlds-v0.3.ahk (probably specnr)
     try:
-        cmd = f"powershell.exe \"$proc = Get-WmiObject Win32_Process -Filter \\\"ProcessId = {str(pid)}\\\";$proc.CommandLine\""
-        p = subprocess.Popen(
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-        response = p.communicate()[0].decode()
+        response = get_command_line(pid)
         if "--gameDir" in response:
             ind = response.index("--gameDir") + 10
             return take_arg(response, ind).replace("\\", "/")

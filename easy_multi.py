@@ -21,6 +21,7 @@ class EasyMulti:
 
         self._options = get_options_instance()
         self._logger = logger
+        self._has_hidden = False
 
         self._mc_instances: List[EMMinecraftInstance] = [
             get_instance_from_dir(i) for i in self._options["last_instances"]]
@@ -83,39 +84,78 @@ class EasyMulti:
                 instance.get_window().revert_title()
 
     def _reset_hotkey_press(self) -> None:
-        current_instance = get_current_mc_instance()
         try:
+            current_instance = get_current_mc_instance()
+            single_instance = len(self._mc_instances) == 1
             if current_instance and current_instance in self._mc_instances:
                 already_reset = False
                 if self._options["use_fullscreen"]:
                     already_reset = True
-                    current_instance.reset(True, len(self._mc_instances) == 1)
+                    current_instance.reset(True, single_instance)
                     time.sleep(0.05)
 
-                next_ind = self._mc_instances.index(current_instance) + 1
-                if next_ind >= len(self._mc_instances):
-                    next_ind = 0
-                next_instance = self._mc_instances[next_ind]
-                if next_instance.has_window(True):
-                    self._mc_instances[next_ind].activate()
-                else:
-                    self.log(f"Missing window for {next_instance.get_name()}")
+                if not single_instance:
+
+                    next_ind = self._mc_instances.index(current_instance) + 1
+                    if next_ind >= len(self._mc_instances):
+                        next_ind = 0
+                    next_instance = self._mc_instances[next_ind]
+                    if next_instance.has_window(True):
+                        self._mc_instances[next_ind].activate()
+                    else:
+                        self.log(
+                            f"Missing window for {next_instance.get_name()}")
+
+                    if self._options["obs_press_hotkey"]:
+                        switch_key = str(next_ind + 1)
+                        if self._options["obs_use_numpad"]:
+                            switch_key = "numpad_" + switch_key
+                        if self._options["obs_use_alt"]:
+                            switch_key = "alt+" + switch_key
+                        press_keys_for_time(switch_key.split("+"), 0.1)
 
                 if not already_reset:
-                    current_instance.reset(True, len(self._mc_instances) == 1)
+                    current_instance.reset(True, single_instance)
+
+                if self._has_hidden:
+                    self._has_hidden = False
+                    for inst in self._mc_instances:
+                        inst.get_window().move(
+                            self._options["screen_location"], self._options["screen_size"])
+
+                press_keys_for_time()
 
                 if self._options["clipboard_on_reset"] != "":
                     clipboard.copy(self._options["clipboard_on_reset"])
 
-        except Exception:
+        except:
             self.log("Error during reset: " +
                      traceback.format_exc().replace("\n", "\\n"))
 
     def _hide_hotkey_press(self) -> None:
-        pass
+        if not self._has_hidden:
+            try:
+                current_instance = get_current_mc_instance()
+                if current_instance and current_instance in self._mc_instances:
+                    self._has_hidden = True
+                    for instance in self._mc_instances:
+                        if instance != current_instance and instance.has_window(False):
+                            instance.get_window().tiny()
+            except Exception:
+                self.log("Error during hiding: " +
+                         traceback.format_exc().replace("\n", "\\n"))
 
     def _bg_reset_hotkey_press(self) -> None:
-        pass
+        if not self._has_hidden:
+            try:
+                current_instance = get_current_mc_instance()
+                if current_instance and current_instance in self._mc_instances:
+                    for instance in self._mc_instances:
+                        if instance != current_instance and instance.has_window(False):
+                            instance.reset()
+            except Exception:
+                self.log("Error during reset: " +
+                         traceback.format_exc().replace("\n", "\\n"))
 
     def get_instance_infos(self) -> List[InstanceInfo]:
         return [
@@ -124,6 +164,16 @@ class EasyMulti:
                     True), instance.is_world_loaded(), instance.get_game_dir()
             ) for instance in self._mc_instances
         ]
+
+    def reset_instance(self, instance_num: int) -> None:
+        inst = self._mc_instances[instance_num]
+        if inst.has_window():
+            self._mc_instances[instance_num].reset()
+
+    def activate_instance(self, instance_num: int) -> None:
+        inst = self._mc_instances[instance_num]
+        if inst.has_window():
+            self._mc_instances[instance_num].activate()
 
     def tick(self) -> None:
         if self._tick_lock.locked():

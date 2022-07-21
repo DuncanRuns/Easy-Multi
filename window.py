@@ -71,11 +71,6 @@ class Window:
             return True
         return False
 
-    def untiny(self, window_size: List[int]) -> None:
-        if self.is_borderless():
-            hwnd_util.move_hwnd(
-                self._hwnd, 0, 0, window_size[0], window_size[1])
-
     def is_borderless(self) -> bool:
         return hwnd_util.is_hwnd_borderless(self._hwnd)
 
