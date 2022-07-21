@@ -70,6 +70,8 @@ class EMMinecraftInstance:
         if self._name == ".minecraft":
             self._name = os.path.split(os.path.split(self._game_dir)[0])[
                 1].replace("\\", "/").strip("/")
+            if self._name == "Roaming":
+                self._name = ".minecraft"
 
         return self._name
 
@@ -178,6 +180,11 @@ class EMMinecraftInstance:
             self._window.move(
                 self._options["screen_location"], self._options["screen_size"])
             time.sleep(0.1)
+
+        # Ensure not borderless
+        if not self._options["use_borderless"] and self._window.is_borderless():
+            self._window.restore_window()
+            self._window.show()
 
         self._last_state_check = time.time()
 
@@ -302,6 +309,10 @@ def get_all_mc_instances() -> List[EMMinecraftInstance]:
         return instances
 
 
+_mc_match = re.compile(
+    r"^Minecraft\*? 1\.[1-9]\d*(\.[1-9]\d*)?( .*)?$").match
+
+
 def get_current_mc_instance() -> Union[EMMinecraftInstance, None]:
     with _retreive_lock:
         global _mc_instance_cache
@@ -317,10 +328,8 @@ def get_current_mc_instance() -> Union[EMMinecraftInstance, None]:
             instance = _mc_instance_cache[_mc_instance_cache.index(instance)]
         else:
             _mc_instance_cache.append(instance)
-    mc_match = re.compile(
-        r"^Minecraft\*? 1\.[1-9]\d*(\.[1-9]\d*)?( .*)?$").match
-    if mc_match(instance.get_window().get_original_title()):
-        return instance
+        if _mc_match(instance.get_window().get_original_title()):
+            return instance
 
 
 def get_instance_from_dir(game_dir: str) -> EMMinecraftInstance:

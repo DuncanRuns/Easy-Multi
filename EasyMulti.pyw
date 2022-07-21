@@ -17,7 +17,11 @@ def main():
         logger = Logger()
         logger.add_callback(print)
         emg = EasyMultiGUI(logger)
-        emg.mainloop()
+        try:
+            emg.mainloop()
+        except:
+            pass
+        emg.on_close()
         options.save_file(opt_path)
         print("Force exiting...")
         os._exit(0)

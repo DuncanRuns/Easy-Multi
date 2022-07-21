@@ -1,9 +1,10 @@
+import webbrowser
 import ttkthemes, threading, os, input_util, time
 import tkinter as tk
 from typing import Callable, List
 from tkinter import ttk
 from easy_multi import EasyMulti, VERSION, InstanceInfo
-from easy_multi_options import get_options_instance, BasicOptions
+from easy_multi_options import get_options_instance, BasicOptions, get_location
 from logger import Logger
 
 
@@ -16,13 +17,95 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-class InstancesDisplay(ttk.LabelFrame):
-    def __init__(self, parent: tk.Widget, remove_callback: Callable[[int], None]) -> None:
+class SingleInstanceDisplay(ttk.Frame):
+    def __init__(self, parent: tk.Widget, display_num: int, remove_callback: Callable[[int], None]):
+        ttk.Frame.__init__(self, parent, borderwidth=1, relief="ridge")
+        self.display_num = display_num
+        self._game_dir = "C:/"
+        self._remove_callback = remove_callback
+        frame = ttk.Frame(self)
+        frame.pack(padx=5, pady=5)
+        self._name_label = ttk.Label(
+            frame, text=" ", width=22, anchor=tk.CENTER)
+        self._status_label = ttk.Label(
+            frame, text=" ", width=22, anchor=tk.CENTER)
+        self._name_label.pack()
+        self._status_label.pack()
+
+        for binder in [self, self._name_label, self._status_label]:
+            binder.bind("<Button-1>", self._left_click)
+            binder.bind("<Button-2>", self._alt_click)
+            binder.bind("<Button-3>", self._alt_click)
+
+    def _left_click(self, event) -> None:
+        webbrowser.open(self._game_dir)
+
+    def _alt_click(self, event) -> None:
+        self._remove_callback(self.display_num)
+
+    def update_info(self, info: InstanceInfo):
+        self._name_label.config(
+            text=info.name)
+        self._game_dir = info.game_dir
+        if not info.has_window:
+            self._status_label.config(text="Instance Closed")
+        elif not info.world_loaded:
+            self._status_label.config(text="World Loading...")
+        else:
+            self._status_label.config(text="World Loaded")
+
+
+class FullInstancesDisplay(ttk.LabelFrame):
+    def __init__(self, parent: tk.Widget, remove_callback: Callable[[int], None], get_infos_callback: Callable[[None], List[InstanceInfo]]) -> None:
         ttk.LabelFrame.__init__(self, parent, text="Instances")
         self._remove_callback = remove_callback
+        self._get_infos_callback = get_infos_callback
 
-    def update_infos(infos: List[InstanceInfo]) -> None:
-        pass
+        ttk.Label(self, text="Left click to open directory", anchor=tk.CENTER).grid(
+            row=0, column=1, sticky="NEWS")
+        ttk.Label(self, text="Right click to remove instance", anchor=tk.CENTER).grid(
+            row=1, column=1, sticky="NEWS")
+        ttk.Label(self, text=" ", anchor=tk.CENTER, width=22).grid(
+            row=1, column=0, sticky="NEWS")
+        ttk.Label(self, text=" ", anchor=tk.CENTER, width=22).grid(
+            row=1, column=2, sticky="NEWS")
+
+        for i in range(3):
+            self.grid_columnconfigure(i, weight=1)
+
+        self._displays: List[SingleInstanceDisplay] = []
+        self.after(0, self._loop)
+
+    def _loop(self) -> None:
+        self.after(2000, self._loop)
+        self.update_infos(self._get_infos_callback())
+
+    def update_infos(self, infos: List[InstanceInfo]) -> None:
+        if len(infos) != len(self._displays):
+            for display in self._displays:
+                display.grid_remove()
+
+            def on_remove(display_num: int) -> None:
+                self._remove_callback(display_num)
+                self.update_infos(self._get_infos_callback())
+
+            self._displays = [
+                SingleInstanceDisplay(self, i, on_remove) for i in range(len(infos))]
+            self._grid_all_displays()
+
+        for i in range(len(infos)):
+            self._displays[i].update_info(infos[i])
+
+    def _grid_all_displays(self) -> None:
+        row = 10
+        column = 0
+        for display in self._displays:
+            if column >= 3:
+                column = 0
+                row += 1
+            display.grid(
+                row=row, column=column, sticky="NEWS", padx=5, pady=5)
+            column += 1
 
 
 _hotkey_setter_lock = threading.Lock()
@@ -98,9 +181,15 @@ class OptionsMenu(tk.Toplevel):
         self._em_options = get_options_instance()
         self.log = self._master.log
 
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
+
         self._main_frame = ttk.Frame(self)
         self._main_frame.grid()
         self._init_widgets()
+
+    def _on_close(self) -> None:
+        self._em_options.save_file(get_location())
+        self.destroy()
 
     def _init_widgets(self) -> None:
         frame = ttk.LabelFrame(self._main_frame, text="Resetting")
@@ -196,9 +285,10 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         self._em_options = get_options_instance()
         self._logger = logger
 
+        self._log_label = None
         self._logger.add_callback(self._on_log)
-        total_lines = 13
-        self._log_var = tk.StringVar(self, value=" \n " * (total_lines - 1))
+        total_lines = 10
+        self._log_text = " \n " * (total_lines - 1)
 
         self.log("Setting up window...")
         self.title("Easy Multi v" + VERSION)
@@ -231,7 +321,6 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         self._running = True
         super().mainloop()
         self._running = False
-        self.on_close()
 
     def on_close(self) -> None:
         self._closed = True
@@ -247,8 +336,8 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
     def _init_widgets(self) -> None:
         self._init_widgets_log(0, 0)
         self._init_widgets_control(0, 1)
-        self._instances_display = InstancesDisplay(
-            self._main_frame, None)  # TODO: add remove_callback
+        self._instances_display = FullInstancesDisplay(
+            self._main_frame, self._easy_multi.remove_instance, self._easy_multi.get_instance_infos)
         self._instances_display.grid(
             row=1, column=0, columnspan=2, padx=5, pady=5, sticky="NEWS")
         self._main_frame.grid_rowconfigure(1, minsize=50)
@@ -259,9 +348,9 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         log_frame.grid(row=row, column=column, rowspan=rowspan, columnspan=columnspan,
                        padx=5, pady=5)
         log_frame.grid_rowconfigure(0, weight=1)
-        label = ttk.Label(
-            log_frame, textvariable=self._log_var, justify="left", width=57)
-        label.grid(row=0, column=0, padx=3, pady=3, sticky="EWS")
+        self._log_label = ttk.Label(
+            log_frame, text=self._log_text, justify="left", width=57)
+        self._log_label.grid(row=0, column=0, padx=3, pady=3, sticky="EWS")
 
     def _init_widgets_control(self, row: int, column: int, rowspan: int = 1, columnspan: int = 1) -> None:
         frame = ttk.LabelFrame(self._main_frame, text="Controls")
@@ -284,7 +373,6 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
 
     def _setup_instances(self) -> None:
         self._easy_multi.setup_instances()
-        # TODO: Make instances display
 
     def _open_options(self) -> None:
         if not (self._options_menu and self._options_menu.winfo_exists()):
@@ -300,9 +388,9 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
 
     def _on_log(self, from_log: str) -> None:
         if not self._closed:
-            lines = [(" " if i == " " else i) for i in [j.strip()
-                                                        for j in self._log_var.get().splitlines()]]
-            new_lines = [(" " if i == " " else i)
+            lines = [(" " if i == "" else i) for i in [j.strip()
+                                                       for j in self._log_text.splitlines()]]
+            new_lines = [(" " if i == "" else i)
                          for i in [j.strip() for j in from_log.splitlines()]]
             for i in range(len(new_lines)):
                 lines.pop(0)
@@ -310,7 +398,9 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
             out = ""
             for line in lines:
                 out += line + "\n"
-            self._log_var.set(out.rstrip())
+            self._log_text = out.rstrip()
+            if self._log_label:
+                self._log_label.config(text=self._log_text)
 
 
 if __name__ == "__main__":

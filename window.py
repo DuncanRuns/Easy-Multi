@@ -15,10 +15,20 @@ class Window:
         self._original_title: str = hwnd_util.get_hwnd_title(self._hwnd)
 
     def get_original_title(self) -> str:
-        return self._original_title
+        mc_match = re.compile(
+            r"^Minecraft\*? 1\.[1-9]\d*(\.[1-9]\d*)?( .*)?$").match
+        if mc_match(self._original_title):
+            return self._original_title
+        else:
+            new_title = self.get_title()
+            if mc_match(new_title):
+                self._original_title = new_title
+                return new_title
+            else:
+                return "Minecraft* 1.16.1"
 
     def revert_title(self) -> None:
-        self.set_title(self._original_title)
+        self.set_title(self.get_original_title())
 
     def is_minecraft(self) -> bool:
         mc_match = re.compile(
@@ -27,7 +37,7 @@ class Window:
 
     def get_mc_version(self) -> Union[Tuple[int, int, int], None]:
         try:
-            vstr = self._original_title.split()[1]
+            vstr = self.get_original_title().split()[1]
             v = vstr.split(".")
             if len(v) == 2:
                 v.append("0")

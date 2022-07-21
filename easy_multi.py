@@ -8,10 +8,11 @@ VERSION = "2.0.0-dev"
 
 
 class InstanceInfo:
-    def __init__(self, name: str, has_window: bool, world_loaded: bool) -> None:
+    def __init__(self, name: str, has_window: bool, world_loaded: bool, game_dir: str) -> None:
         self.name = name
         self.has_window = has_window
         self.world_loaded = world_loaded
+        self.game_dir = game_dir
 
 
 class EasyMulti:
@@ -56,6 +57,14 @@ class EasyMulti:
             instance.set_logger(self._logger)
         self.log(f"Found {len(self._mc_instances)} instance(s)")
         self.set_titles()
+        self._options["last_instances"] = [
+            i.get_game_dir() for i in self._mc_instances]
+
+    def remove_instance(self, instance_num: int) -> None:
+        inst = self._mc_instances.pop(instance_num)
+        if inst.has_window():
+            inst.get_window().revert_title()
+        self.log(f"Removed Instance: {inst.get_name()}")
         self._options["last_instances"] = [
             i.get_game_dir() for i in self._mc_instances]
 
@@ -111,7 +120,8 @@ class EasyMulti:
     def get_instance_infos(self) -> List[InstanceInfo]:
         return [
             InstanceInfo(
-                instance.get_name(), instance.has_window(True), instance.is_world_loaded()
+                instance.get_name(), instance.has_window(
+                    True), instance.is_world_loaded(), instance.get_game_dir()
             ) for instance in self._mc_instances
         ]
 
