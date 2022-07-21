@@ -59,7 +59,7 @@ I believe I have met all of these goals.
 ## Acknowledgements
 
 Thanks to all the following individuals and teams for their projects which helped make this project possible:
-- Specner, Four, and many others who have worked on reset and multi macros over the past year.
+- Specnr, Four, and many others who have worked on reset and multi macros over the past year.
 - [Mr-Technician's Borderless Minecraft](https://github.com/Mr-Technician/BorderlessMinecraft)
 - [btsdev's Global Hotkeys module](https://github.com/btsdev/global_hotkeys)
 - [boppreh's keyboard module](https://github.com/boppreh/keyboard)
