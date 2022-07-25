@@ -39,7 +39,7 @@ class EMMinecraftInstance:
         self._loaded_preview: bool = True
         self._loaded_world: bool = True
 
-        self._last_state_check = 0
+        self._next_state_check = 0
         self._last_world_clear = 0
 
         self._time_of_last_activity = 0
@@ -106,12 +106,6 @@ class EMMinecraftInstance:
         except:
             pass
 
-    def _get_mc_version(self) -> Union[Tuple[int, int, int], None]:
-        if self._mc_version:
-            return self._mc_version
-        self._mc_version = self._window.get_mc_version()
-        return self._mc_version
-
     def reset(self, is_full: bool = False, single_instance: bool = False):
         func = self._full_reset if is_full else self._send_reset
         threading.Thread(target=func, args=(single_instance,)).start()
@@ -131,7 +125,8 @@ class EMMinecraftInstance:
     def _send_reset(self, single_instance: bool = False) -> None:
         with self._reset_lock:
             self.log("Resetting...")
-            if self._get_mc_version()[1] < 14:
+            mc_version = self._window.get_mc_version()
+            if mc_version[1] < 14:
                 self._window.press_reset_keys()
             else:
                 if self._get_create_world_key() is not None:
@@ -141,7 +136,7 @@ class EMMinecraftInstance:
 
             self._pause_on_load = self._options["pause_on_load"] and not single_instance
 
-            self._loaded_preview = self._get_mc_version()[1] < 14
+            self._loaded_preview = mc_version[1] < 14
             self._loaded_world = False
             time.sleep(0.1)
             self.jump_log_progress()
@@ -166,29 +161,32 @@ class EMMinecraftInstance:
             self.log("Activated")
 
     def ensure_window_state(self) -> None:
-        # Ensure not minimized
-        if self._window.is_minimized():
-            self.log("Unminimizing...")
-            self._window.show()
-            if self._window.is_fullscreen():
-                self._window.press_key(self._get_fullscreen_key())
-            time.sleep(0.1)
+        if self.has_window():
+            # Ensure not minimized
+            if self._window.is_minimized():
+                self.log("Unminimizing...")
+                self._window.show()
+                if self._window.is_fullscreen():
+                    self._window.press_key(self._get_fullscreen_key())
+                time.sleep(0.1)
 
-        # Ensure borderless
-        if self._options["use_borderless"] and not self._window.is_borderless():
-            self._window.show()
-            time.sleep(0.05)
-            self._window.go_borderless()
-            self._window.move(
-                self._options["screen_location"], self._options["screen_size"])
-            time.sleep(0.1)
+            # Ensure borderless
+            if self._options["use_borderless"] and not self._window.is_borderless():
+                self._window.show()
+                time.sleep(0.05)
+                self._window.go_borderless()
+                self._window.move(
+                    self._options["screen_location"], self._options["screen_size"])
+                time.sleep(0.1)
 
-        # Ensure not borderless
-        if not self._options["use_borderless"] and self._window.is_borderless():
-            self._window.restore_window()
-            self._window.show()
+            # Ensure not borderless
+            if not self._options["use_borderless"] and self._window.is_borderless():
+                self._window.restore_window()
+                self._window.show()
 
-        self._last_state_check = time.time()
+        self._next_state_check = time.time() + 0.5
+        if not self.has_window(True):
+            self._next_state_check += 2
 
     def tick(self, is_active: bool = True) -> None:
         if self._tick_lock.locked():
@@ -196,17 +194,20 @@ class EMMinecraftInstance:
             return
 
         with self._tick_lock:
-            if self.has_window():
-                if abs(time.time() - self._last_state_check) > 0.5:
+            try:
+                if time.time() > self._next_state_check:
                     self.ensure_window_state()
-                if self._options["auto_clear_worlds"] and abs(time.time() - self._last_world_clear) > 20:
-                    self._last_world_clear = time.time()
-                    threading.Thread(target=self.clear_worlds).start()
-                # Log Reader
-                if (not self._loaded_preview) or (not self._loaded_world):
-                    self._time_of_last_activity = time.time()
-                if abs(time.time() - self._time_of_last_activity) < 2:
-                    self._process_logs(is_active)
+                if self.has_window(True):
+                    if self._options["auto_clear_worlds"] and abs(time.time() - self._last_world_clear) > 20:
+                        self._last_world_clear = time.time()
+                        threading.Thread(target=self.clear_worlds).start()
+                    # Log Reader
+                    if (not self._loaded_preview) or (not self._loaded_world):
+                        self._time_of_last_activity = time.time()
+                    if abs(time.time() - self._time_of_last_activity) < 2:
+                        self._process_logs(is_active)
+            except:
+                print("Error during tick, probably a window missing.")
 
     def _process_logs(self, is_active: bool = True) -> None:
         new_log_lines = self.get_next_log_lines()
@@ -329,17 +330,19 @@ def get_current_mc_instance() -> Union[EMMinecraftInstance, None]:
             instance = _mc_instance_cache[_mc_instance_cache.index(instance)]
         else:
             _mc_instance_cache.append(instance)
-        if _mc_match(instance.get_window().get_original_title()):
-            return instance
+        if instance.has_window():
+            if _mc_match(instance.get_window().get_original_title()):
+                return instance
 
 
 def get_instance_from_dir(game_dir: str) -> EMMinecraftInstance:
-    instance = EMMinecraftInstance(game_dir=game_dir)
-    if instance in _mc_instance_cache:
-        instance = _mc_instance_cache[_mc_instance_cache.index(instance)]
-    else:
-        _mc_instance_cache.append(instance)
-    return instance
+    with _retreive_lock:
+        instance = EMMinecraftInstance(game_dir=game_dir)
+        if instance in _mc_instance_cache:
+            instance = _mc_instance_cache[_mc_instance_cache.index(instance)]
+        else:
+            _mc_instance_cache.append(instance)
+        return instance
 
 
 if __name__ == "__main__":

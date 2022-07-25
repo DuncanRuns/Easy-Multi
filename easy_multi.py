@@ -85,7 +85,7 @@ class EasyMulti:
     def restore_titles(self) -> None:
         self.log("Restoring titles...")
         for instance in self._mc_instances:
-            if instance.has_window():
+            if instance.has_window(True):
                 instance.get_window().revert_title()
 
     def _reset_hotkey_press(self) -> None:
@@ -198,8 +198,8 @@ class EasyMulti:
 
             # Instance ticking
             for instance in self._mc_instances:
-                instance.tick(
-                    (instance == active_instance) if active_instance else False)
+                threading.Thread(target=instance.tick, args=(
+                    (instance == active_instance) if active_instance else False,)).start()
 
             # Auto Hiding
             if active_instance is None:

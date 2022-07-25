@@ -3,7 +3,6 @@
 import hwnd_util, win32con, threading, time, re
 from typing import List, Tuple, Union
 
-_mc_window_cache = []
 _retreive_lock = threading.Lock()
 
 
@@ -58,8 +57,6 @@ class Window:
         hwnd_util.activate_hwnd(self._hwnd)
 
     def show(self) -> None:
-        """Like activate but doesn't set to the foreground.
-        """
         hwnd_util.show_hwnd(self._hwnd)
 
     def is_active(self) -> bool:
@@ -94,9 +91,6 @@ class Window:
             return self._dir
         self._dir = hwnd_util.get_mc_dir(self._pid)
         return self._dir
-
-    def press_f11(self) -> None:
-        hwnd_util.send_key_to_hwnd(self._hwnd, win32con.VK_F11)
 
     def press_reset_keys(self, attempts=2, use_post=True) -> None:
         """
@@ -153,6 +147,9 @@ class Window:
         return self._hwnd == __o.get_hwnd()
 
 
+_mc_window_cache: List[Window] = []
+
+
 def get_all_mc_windows() -> List[Window]:
     with _retreive_lock:
         global _mc_window_cache
@@ -167,6 +164,10 @@ def get_all_mc_windows() -> List[Window]:
         return windows
 
 
+def get_window_cache():
+    return _mc_window_cache.copy()
+
+
 def get_current_window() -> Window:
     with _retreive_lock:
         global _mc_window_cache
@@ -179,6 +180,9 @@ def get_current_window() -> Window:
 
 
 def get_window_by_dir(mc_dir: str) -> Union[None, Window]:
+    for window in get_window_cache():
+        if window.get_mc_dir() == mc_dir:
+            return window
     for window in get_all_mc_windows():
         if window.get_mc_dir() == mc_dir:
             return window
