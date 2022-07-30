@@ -45,7 +45,6 @@ class EMMinecraftInstance:
         self._time_of_last_activity = 0
 
         self._create_world_key = None
-        self._fullscreen_key = None
         self._mc_version = None
 
         self._tick_lock = threading.Lock()
@@ -86,14 +85,6 @@ class EMMinecraftInstance:
         self._create_world_key = self._get_key("key_Create New World")
         return self._create_world_key
 
-    def _get_fullscreen_key(self) -> Union[int, None]:
-        if self._fullscreen_key:
-            return self._fullscreen_key
-        self._fullscreen_key = self._get_key("key_key.fullscreen")
-        if not self._fullscreen_key:
-            return 0x7A
-        return self._fullscreen_key
-
     def _get_key(self, key: str) -> Union[int, None]:
         options_path = os.path.join(self._game_dir, "options.txt")
         try:
@@ -107,6 +98,8 @@ class EMMinecraftInstance:
             pass
 
     def reset(self, is_full: bool = False, single_instance: bool = False):
+        # is_full does not reference fullscreen, it means "full reset" which considers more things.
+        # A non-full reset just sends the reset key and resets plans.
         func = self._full_reset if is_full else self._send_reset
         threading.Thread(target=func, args=(single_instance,)).start()
 
@@ -116,9 +109,6 @@ class EMMinecraftInstance:
             if not self.has_window(True):
                 self.log("No window opened yet...")
                 return
-
-            if self._window.is_fullscreen():
-                self._window.press_key(self._get_fullscreen_key())
 
         self._send_reset(single_instance)
 
@@ -149,8 +139,6 @@ class EMMinecraftInstance:
                 self._window.activate()
 
             if self._loaded_world:
-                if self._options["use_fullscreen"]:
-                    self._window.press_key(self._get_fullscreen_key())
 
                 # Magic Number :((( Without this, the mouse does not get locked into MC
                 time.sleep(0.05)
@@ -166,8 +154,6 @@ class EMMinecraftInstance:
             if self._window.is_minimized():
                 self.log("Unminimizing...")
                 self._window.show()
-                if self._window.is_fullscreen():
-                    self._window.press_key(self._get_fullscreen_key())
                 time.sleep(0.1)
 
             # Ensure borderless
@@ -225,8 +211,6 @@ class EMMinecraftInstance:
                         self._window.press_f3_esc()
                     else:
                         self._window.press_esc()
-                if is_active and self._options["use_fullscreen"] and (not self._window.is_fullscreen()):
-                    self._window.press_key(self._get_fullscreen_key())
                 break
 
     def get_next_log_lines(self) -> List[str]:
@@ -267,11 +251,9 @@ class EMMinecraftInstance:
 
     def has_window(self, no_update: bool = False) -> bool:
         if not no_update:
-            if self._window is None:
+            if self._window is None or not self._window.exists():
                 self._window = get_window_by_dir(self._game_dir)
                 self._log_progress = 0
-            elif not self._window.exists():
-                self._window = None
         return self._window is not None
 
     def __eq__(self, __o: object) -> bool:

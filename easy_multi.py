@@ -21,6 +21,7 @@ class EasyMulti:
 
         self._options = get_options_instance()
         self._logger = logger
+        self._refresh_auto_hide_time()
 
         self._has_hidden = False
 
@@ -44,18 +45,18 @@ class EasyMulti:
 
     def update_hotkeys(self) -> None:
         clear_and_stop_hotkey_checker()
-        if len(self._options["reset_hotkey"]) > 0:
+        if self._options["reset_hotkey"]:
             register_hotkey(self._options["reset_hotkey"],
                             self._reset_hotkey_press)
-        if len(self._options["hide_hotkey"]) > 0:
+        if self._options["hide_hotkey"]:
             register_hotkey(self._options["hide_hotkey"],
                             self._hide_hotkey_press)
-        if len(self._options["bg_reset_hotkey"]) > 0:
+        if self._options["bg_reset_hotkey"]:
             register_hotkey(self._options["bg_reset_hotkey"],
                             self._bg_reset_hotkey_press)
         start_hotkey_checker()
 
-    def setup_instances(self) -> None:
+    def redetect_instances(self) -> None:
         self.restore_titles()
         self.log("Redetecting Instances...")
         self._mc_instances = get_all_mc_instances()
@@ -93,11 +94,6 @@ class EasyMulti:
             current_instance = get_current_mc_instance()
             single_instance = len(self._mc_instances) == 1
             if current_instance and current_instance in self._mc_instances:
-                already_reset = False
-                if self._options["use_fullscreen"]:
-                    already_reset = True
-                    current_instance.reset(True, single_instance)
-                    time.sleep(0.05)
 
                 if not single_instance:
 
@@ -117,10 +113,10 @@ class EasyMulti:
                             switch_key = "numpad_" + switch_key
                         if self._options["obs_use_alt"]:
                             switch_key = "alt+" + switch_key
-                        press_keys_for_time(switch_key.split("+"), 0.1)
+                        threading.Thread(target=press_keys_for_time, args=(
+                            switch_key.split("+"), 0.1)).start()
 
-                if not already_reset:
-                    current_instance.reset(True, single_instance)
+                current_instance.reset(True, single_instance)
 
                 if self._has_hidden:
                     self._has_hidden = False
@@ -149,7 +145,7 @@ class EasyMulti:
                 if current_instance and current_instance in self._mc_instances:
                     self._has_hidden = True
                     for instance in self._mc_instances:
-                        if instance != current_instance and instance.has_window(False):
+                        if instance != current_instance and instance.has_window(True):
                             instance.get_window().tiny()
                 self._refresh_auto_hide_time()
             except Exception:
@@ -162,7 +158,7 @@ class EasyMulti:
                 current_instance = get_current_mc_instance()
                 if current_instance and current_instance in self._mc_instances:
                     for instance in self._mc_instances:
-                        if instance != current_instance and instance.has_window(False):
+                        if instance != current_instance and instance.has_window(True):
                             instance.reset()
                 self._refresh_auto_hide_time()
             except Exception:

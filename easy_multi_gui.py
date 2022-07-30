@@ -209,22 +209,24 @@ class OptionsMenu(tk.Toplevel):
         self._init_widgets_reset(frame)
 
         frame = ttk.LabelFrame(self._main_frame, text="Window")
-        frame.grid(row=0, column=10, sticky="NEWS", padx=5, pady=5)
+        frame.grid(row=2, column=0, sticky="NEWS",
+                   padx=5, pady=5, columnspan=2)
         self._init_widgets_window(frame)
 
         frame = ttk.LabelFrame(self._main_frame, text="Hotkeys")
-        frame.grid(row=10, column=0, sticky="NEWS", padx=5, pady=5)
+        frame.grid(row=0, column=1, sticky="NEWS", padx=5, pady=5)
         self._init_widgets_hotkeys(frame)
 
         frame = ttk.LabelFrame(self._main_frame, text="Automatic Hiding")
-        frame.grid(row=10, column=10, sticky="NEWS", padx=5, pady=5)
+        frame.grid(row=1, column=1, sticky="NEWS", padx=5, pady=5)
         self._init_widgets_hiding(frame)
 
-        frame = ttk.LabelFrame(self._main_frame, text="OBS")
-        frame.grid(row=20, column=0, sticky="NEWS", padx=5, pady=5)
+        frame = ttk.LabelFrame(self._main_frame, text="Scene Switching")
+        frame.grid(row=1, column=0, sticky="NEWS", padx=5, pady=5)
         self._init_widgets_obs(frame)
 
     def _init_widgets_reset(self, frame: ttk.Frame) -> None:
+
         var = tk.BooleanVar(self)
         self._em_options.set_option_wrapper("pause_on_load", var)
         ttk.Checkbutton(frame, text="Pause on Load", variable=var).pack(
@@ -250,16 +252,8 @@ class OptionsMenu(tk.Toplevel):
 
     def _init_widgets_window(self, frame: ttk.Frame) -> None:
         var = tk.BooleanVar(self)
-        self._em_options.set_option_wrapper("use_fullscreen", var)
-        ttk.Checkbutton(frame, text="Use Fullscreen (not recommended)", variable=var, state=tk.DISABLED).pack(
-            padx=5, pady=5, anchor="w")
-
-        var = tk.BooleanVar(self)
         self._em_options.set_option_wrapper("use_borderless", var)
         ttk.Checkbutton(frame, text="Use Borderless", variable=var).pack(
-            padx=5, pady=5, anchor="w")
-
-        ttk.Label(frame, text="Position & Size Customization Soon™").pack(
             padx=5, pady=5, anchor="w")
 
     def _init_widgets_hiding(self, frame: ttk.Frame) -> None:
@@ -295,20 +289,23 @@ class OptionsMenu(tk.Toplevel):
                      self.log, self._master.on_hotkey_change, self._master.is_running).pack(padx=5, pady=5, anchor="w")
 
     def _init_widgets_obs(self, frame: ttk.Frame) -> None:
+
         var = tk.BooleanVar(self)
         self._em_options.set_option_wrapper("obs_press_hotkey", var)
-        ttk.Checkbutton(frame, text="Press Hotkey", variable=var).pack(
-            padx=5, pady=5, anchor="w")
+        press_hotkey_button = ttk.Checkbutton(
+            frame, text="Press Hotkey", variable=var)
+        press_hotkey_button.pack(padx=5, pady=5, anchor="w")
 
         var = tk.BooleanVar(self)
         self._em_options.set_option_wrapper("obs_use_numpad", var)
-        ttk.Checkbutton(frame, text="Use Numpad", variable=var).pack(
-            padx=5, pady=5, anchor="w")
+        use_numpad_button = ttk.Checkbutton(
+            frame, text="Use Numpad", variable=var)
+        use_numpad_button.pack(padx=5, pady=5, anchor="w")
 
         var = tk.BooleanVar(self)
         self._em_options.set_option_wrapper("obs_use_alt", var)
-        ttk.Checkbutton(frame, text="Use Alt", variable=var).pack(
-            padx=5, pady=5, anchor="w")
+        use_alt_button = ttk.Checkbutton(frame, text="Use Alt", variable=var)
+        use_alt_button.pack(padx=5, pady=5, anchor="w")
 
 
 class EasyMultiGUI(ttkthemes.ThemedTk):
@@ -397,20 +394,20 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
                         padx=padx, pady=pady, sticky="NEWS")
             return widget
 
-        gr(ttk.Button(frame, text="Setup Instances",
-           command=self._setup_instances), 0, 0)
+        gr(ttk.Button(frame, text="Redetect Instances",
+           command=self._redetect_instances), 0, 0)
 
         gr(ttk.Button(frame, text="Set Titles",
            command=self._easy_multi.set_titles), 1, 0)
 
-        gr(ttk.Button(frame, text="Restore Titles",
+        gr(ttk.Button(frame, text="Open Folder",
            command=self._easy_multi.restore_titles), 2, 0)
 
         gr(ttk.Button(frame, text="Options...", command=lambda *x: self._open_options()),
            100, 0)
 
-    def _setup_instances(self) -> None:
-        self._easy_multi.setup_instances()
+    def _redetect_instances(self) -> None:
+        self._easy_multi.redetect_instances()
 
     def _open_options(self) -> None:
         if not (self._options_menu and self._options_menu.winfo_exists()):

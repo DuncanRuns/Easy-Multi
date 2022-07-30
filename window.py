@@ -181,10 +181,10 @@ def get_current_window() -> Window:
 
 def get_window_by_dir(mc_dir: str) -> Union[None, Window]:
     for window in get_window_cache():
-        if window.get_mc_dir() == mc_dir:
+        if window.exists() and window.get_mc_dir() == mc_dir:
             return window
     for window in get_all_mc_windows():
-        if window.get_mc_dir() == mc_dir:
+        if window.exists() and window.get_mc_dir() == mc_dir:
             return window
 
 
