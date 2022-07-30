@@ -28,6 +28,7 @@ class EasyMulti:
         self._mc_instances: List[EMMinecraftInstance] = [
             get_instance_from_dir(i) for i in self._options["last_instances"]]
         if len(self._mc_instances) > 0:
+            self.update_instance_nums()
             self.set_titles()
         for instance in self._mc_instances:
             instance.set_logger(logger)
@@ -63,6 +64,7 @@ class EasyMulti:
         for instance in self._mc_instances:
             instance.set_logger(self._logger)
         self.log(f"Found {len(self._mc_instances)} instance(s)")
+        self.update_instance_nums()
         self.set_titles()
         self._options["last_instances"] = [
             i.get_game_dir() for i in self._mc_instances]
@@ -74,6 +76,8 @@ class EasyMulti:
         self.log(f"Removed Instance: {inst.get_name()}")
         self._options["last_instances"] = [
             i.get_game_dir() for i in self._mc_instances]
+        self.update_instance_nums()
+        self.set_titles()
 
     def set_titles(self) -> None:
         self.log("Setting titles...")
@@ -82,6 +86,12 @@ class EasyMulti:
             i += 1
             if instance.has_window():
                 instance.get_window().set_title(str(i))
+
+    def update_instance_nums(self) -> None:
+        i = 0
+        for instance in self._mc_instances:
+            i += 1
+            instance.update_num(i)
 
     def restore_titles(self) -> None:
         self.log("Restoring titles...")

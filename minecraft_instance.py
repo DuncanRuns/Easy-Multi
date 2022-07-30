@@ -33,6 +33,7 @@ class EMMinecraftInstance:
         self._logger = logger
 
         self._name = None
+        self._num = None
 
         self._pause_on_load: bool = False
 
@@ -253,8 +254,13 @@ class EMMinecraftInstance:
         if not no_update:
             if self._window is None or not self._window.exists():
                 self._window = get_window_by_dir(self._game_dir)
+                if self._num and self._window:
+                    self._window.set_title(str(self._num))
                 self._log_progress = 0
         return self._window is not None
+
+    def update_num(self, num: int) -> bool:
+        self._num = num
 
     def __eq__(self, __o: object) -> bool:
         return type(self) == type(__o) and self._game_dir == __o._game_dir
