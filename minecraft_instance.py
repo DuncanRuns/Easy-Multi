@@ -255,6 +255,7 @@ class EMMinecraftInstance:
             if self._window is None or not self._window.exists():
                 self._window = get_window_by_dir(self._game_dir)
                 if self._num and self._window:
+                    self.log("Window found, title set")
                     self._window.set_title(str(self._num))
                 self._log_progress = 0
         return self._window is not None
