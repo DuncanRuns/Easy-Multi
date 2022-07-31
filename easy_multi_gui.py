@@ -1,11 +1,10 @@
-import webbrowser
-import ttkthemes, threading, os, input_util, time
+import ttkthemes, threading, os, input_util, time, webbrowser
 import tkinter as tk
 import tkinter.messagebox as tkMessageBox
 from typing import Callable, List
 from tkinter import ttk
 from easy_multi import EasyMulti, VERSION, InstanceInfo
-from easy_multi_options import get_options_instance, BasicOptions, get_location
+from easy_multi_options import get_options_instance, BasicOptions, get_location, get_or_create_folder
 from logger import Logger
 
 
@@ -401,7 +400,7 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
            command=self._easy_multi.set_titles), 1, 0)
 
         gr(ttk.Button(frame, text="Open Folder",
-           command=self._easy_multi.restore_titles), 2, 0)
+           command=lambda *x: webbrowser.open(get_or_create_folder())), 2, 0)
 
         gr(ttk.Button(frame, text="Options...", command=lambda *x: self._open_options()),
            100, 0)
