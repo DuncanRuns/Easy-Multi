@@ -6,9 +6,9 @@ from typing import Callable, List, Union
 
 
 NEW_WORLD_RE = r"^New World( \(\d+\))?$"
-RSPEEDRUN_RE = r"RandomSpeedrun #\d+$"
-SSPEEDRUN_RE = r"SetSpeedrun #\d+$"
-SPEEDRUN_RE = r"Speedrun #\d+$"
+RSPEEDRUN_RE = r"^Random ?Speedrun #\d+( \(\d+\))?$"
+SSPEEDRUN_RE = r"^Set ?Speedrun #\d+( \(\d+\))?$"
+SPEEDRUN_RE = r"^Speedrun #\d+( \(\d+\))?$"
 
 
 def ask_for_directory(og_path: str = None):
