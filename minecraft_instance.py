@@ -86,6 +86,19 @@ class EMMinecraftInstance:
         self._create_world_key = self._get_key("key_Create New World")
         return self._create_world_key
 
+    def wait_for_all_activity(self) -> None:
+        locks = (self._log_lock, self._tick_lock,
+                 self._clear_lock, self._reset_lock)
+
+        still_locked = True
+        while still_locked:
+            time.sleep(0.01)
+            still_locked = False
+            for lock in locks:
+                if lock.locked():
+                    still_locked = True
+                    break
+
     def _get_key(self, key: str) -> Union[int, None]:
         options_path = os.path.join(self._game_dir, "options.txt")
         try:
