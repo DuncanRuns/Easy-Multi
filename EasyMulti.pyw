@@ -1,10 +1,10 @@
 # EasyMulti.pyw is the main file which is run through the .exe.
 # The pyw extension also tells windows that it is a GUI based script as opposed to a CLI.
-# This file can also be run as a python script on linux (eg. `python3 EasyMulti.pyw`).
+# This file can also be run as a python script on linux (e.g. `python3 EasyMulti.pyw`).
 
-import traceback, os
+import traceback, os, threading, time
 import tkinter.messagebox as tkMessageBox
-from easy_multi_gui import *
+from easy_multi_gui import EasyMultiGUI
 from easy_multi_options import get_location, get_options_instance
 from logger import Logger
 

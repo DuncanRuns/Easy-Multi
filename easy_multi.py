@@ -1,8 +1,9 @@
-import threading, traceback, clipboard
+import threading, traceback, clipboard, time
 from logger import Logger
 from minecraft_instance import EMMinecraftInstance, get_all_mc_instances, get_current_mc_instance, get_instance_from_dir
 from easy_multi_options import get_options_instance
-from input_util import *
+from input_util import clear_and_stop_hotkey_checker, register_hotkey, start_hotkey_checker, press_keys_for_time
+from typing import List
 
 VERSION = "2.0.0-dev"
 
