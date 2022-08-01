@@ -16,6 +16,9 @@ class Logger:
     def add_callback(self, callback: Callable[[str], None]) -> None:
         self._callbacks.append(callback)
 
+    def clear_callbacks(self) -> None:
+        self._callbacks.clear()
+
     def log(self, line: str, source: str = None) -> None:
         threading.Thread(target=self._log_thread, args=(line, source)).start()
 

@@ -92,7 +92,7 @@ class EMMinecraftInstance:
 
         still_locked = True
         while still_locked:
-            time.sleep(0.01)
+            time.sleep(0.1)
             still_locked = False
             for lock in locks:
                 if lock.locked():

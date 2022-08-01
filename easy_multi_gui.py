@@ -321,7 +321,7 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         total_lines = 10
         self._log_text = " \n " * (total_lines - 1)
 
-        self.log("Setting up window...")
+        self.log("Initializing EasyMulti...")
         self.title("Easy Multi v" + VERSION)
         self.resizable(0, 0)
         try:
@@ -329,8 +329,8 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
         except:
             pass
         self.attributes("-topmost", 1)
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
 
-        self.log("Initializing EasyMulti...")
         self._easy_multi = EasyMulti(logger)
 
         self.log("Creating widgets...")
@@ -342,24 +342,16 @@ class EasyMultiGUI(ttkthemes.ThemedTk):
 
         self.log("")
         self.log("Welcome to Easy Multi v" + VERSION)
-        self.after(50, self._loop)
+        self._easy_multi.start()
 
-    def _loop(self) -> None:
-        threading.Thread(target=self._easy_multi.tick).start()
-        self.after(50, self._loop)
+    def _on_close(self, *args) -> None:
+        self._easy_multi.end_and_wait()
+        self.destroy()
 
     def mainloop(self) -> None:
         self._running = True
         super().mainloop()
-        self._running = False
-
-    def on_close(self) -> None:
-        self._closed = True
-        input_util.clear_and_stop_hotkey_checker()
-        self._easy_multi.restore_titles()
-        time.sleep(0.1)
-        self._logger.wait_for_file_write()
-        time.sleep(0.1)
+        self._running = False  # Window close should already set ._running to false
 
     def is_running(self) -> None:
         return self._running

@@ -18,6 +18,9 @@ class InstanceInfo:
 class EasyMulti:
     def __init__(self, logger: Logger) -> None:
         self._tick_lock = threading.Lock()
+        self._run_lock = threading.Lock()
+
+        self._running = False
 
         self._options = get_options_instance()
         self._logger = logger
@@ -96,10 +99,16 @@ class EasyMulti:
     def restore_titles(self) -> None:
         self.log("Restoring titles...")
         for instance in self._mc_instances:
-            if instance.has_window(True):
+            try:
                 instance.get_window().revert_title()
+            except:
+                pass
 
     def _reset_hotkey_press(self) -> None:
+        if self._running:
+            self._reset_current_instance()
+
+    def _reset_current_instance(self) -> None:
         try:
             current_instance = get_current_mc_instance()
             single_instance = len(self._mc_instances) == 1
@@ -134,7 +143,7 @@ class EasyMulti:
                         instance.get_window().move(
                             self._options["screen_location"], self._options["screen_size"])
                         if instance != current_instance:
-                            instance.reset()
+                            instance.reset(False)
 
                 if self._options["clipboard_on_reset"] != "":
                     clipboard.copy(self._options["clipboard_on_reset"])
@@ -146,7 +155,8 @@ class EasyMulti:
                      traceback.format_exc().replace("\n", "\\n"))
 
     def _hide_hotkey_press(self) -> None:
-        self._hide_other_instances()
+        if self._running:
+            self._hide_other_instances()
 
     def _hide_other_instances(self) -> None:
         if not self._has_hidden:
@@ -163,6 +173,10 @@ class EasyMulti:
                          traceback.format_exc().replace("\n", "\\n"))
 
     def _bg_reset_hotkey_press(self) -> None:
+        if self._running:
+            self._reset_other_instances()
+
+    def _reset_other_instances(self) -> None:
         if not self._has_hidden:
             try:
                 current_instance = get_current_mc_instance()
@@ -192,6 +206,51 @@ class EasyMulti:
         inst = self._mc_instances[instance_num]
         if inst.has_window():
             self._mc_instances[instance_num].activate()
+
+    def start(self) -> None:
+        self._running = True
+        threading.Thread(target=self._run).start()
+
+    def end_and_wait(self) -> None:
+        if self._running:
+            self._logger.clear_callbacks()
+            self._logger.add_callback(print)
+            self._running = False
+            self.log("Stopping hotkey checker...")
+            clear_and_stop_hotkey_checker()
+            i = 0
+            for instance in self._mc_instances:
+                i += 1
+                self.log(f"Stopping instance #{i}...")
+                instance.wait_for_all_activity()
+            self.log("Waiting for easy multi tick to end...")
+            self.wait_for_all_activity()
+            self.restore_titles()
+            self.log("Waiting for log file write... (Goodbye)")
+            time.sleep(0.1)
+            self._logger.wait_for_file_write()
+
+    stop = close = end = end_and_wait
+
+    def wait_for_all_activity(self) -> None:
+        locks = (self._run_lock, self._tick_lock)
+
+        still_locked = True
+        while still_locked:
+            time.sleep(0.1)
+            still_locked = False
+            for lock in locks:
+                if lock.locked():
+                    still_locked = True
+                    break
+
+    def _run(self) -> None:
+        if self._run_lock.locked():
+            return
+        with self._run_lock:
+            while self._running:
+                time.sleep(0.02)
+                threading.Thread(target=self.tick).start()
 
     def tick(self) -> None:
         if self._tick_lock.locked():

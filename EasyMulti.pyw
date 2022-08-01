@@ -1,6 +1,6 @@
-# EasyMulti.pyw is the main file which is ran through the .exe.
+# EasyMulti.pyw is the main file which is run through the .exe.
 # The pyw extension also tells windows that it is a GUI based script as opposed to a CLI.
-# This file can also be ran as a python script on linux (eg. `python3 EasyMulti.pyw`).
+# This file can also be run as a python script on linux (eg. `python3 EasyMulti.pyw`).
 
 import traceback, os
 import tkinter.messagebox as tkMessageBox
@@ -20,10 +20,10 @@ def main():
             emg.mainloop()
         except:
             pass
-        emg.on_close()
         options.save_file(opt_path)
+        print("Threads:", threading.enumerate())
         if len(threading.enumerate()) > 2:
-            print("Threads:", threading.enumerate())
+            print("Force exiting in 1 second...")
             time.sleep(1)  # Wait in case something else is running...
             print("Force exiting...")
             os._exit(0)
