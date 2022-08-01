@@ -21,11 +21,13 @@ def main():
         except:
             pass
         options.save_file(opt_path)
+        print("Saved options")
         print("Threads:", threading.enumerate())
-        if len(threading.enumerate()) > 2:
+        if len(threading.enumerate()) > 1:
             print("Force exiting in 1 second...")
             time.sleep(1)  # Wait in case something else is running...
             print("Force exiting...")
+            print("Losing these threads:", threading.enumerate())
             os._exit(0)
     except:
         error = traceback.format_exc()
