@@ -30,7 +30,7 @@ class EasyMultiOptions(BasicOptions):
         self.bg_reset_hotkey = ["["]
 
         # OBS
-        self.obs_press_hotkey = False
+        self.obs_press_hotkey = True
         self.obs_use_numpad = True
         self.obs_use_alt = False
 
