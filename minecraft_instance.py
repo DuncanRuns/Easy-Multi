@@ -190,7 +190,7 @@ class EMMinecraftInstance:
 
     def tick(self, is_active: bool = True) -> None:
         if self._tick_lock.locked():
-            # Cancel tick if already being ran
+            # Cancel tick if already being run
             return
 
         with self._tick_lock:

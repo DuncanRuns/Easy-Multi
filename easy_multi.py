@@ -254,7 +254,7 @@ class EasyMulti:
 
     def tick(self) -> None:
         if self._tick_lock.locked():
-            # Cancel tick if already being ran
+            # Cancel tick if already being run
             return
         with self._tick_lock:
             active_instance = get_current_mc_instance()
