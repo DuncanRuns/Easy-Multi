@@ -219,11 +219,6 @@ class EasyMulti:
             self._running = False
             self.log("Stopping hotkey checker...")
             clear_and_stop_hotkey_checker()
-            i = 0
-            for instance in self._mc_instances:
-                i += 1
-                self.log(f"Stopping instance #{i}...")
-                instance.wait_for_all_activity()
             self.log("Waiting for easy multi tick to end...")
             self.wait_for_all_activity()
             self.restore_titles()
