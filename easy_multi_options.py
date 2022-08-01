@@ -3,6 +3,14 @@ from basic_options import BasicOptions
 
 
 class EasyMultiOptions(BasicOptions):
+    def disconnect_all_wrappers(self) -> None:
+        # Used on end because tkinter value wrappers suck
+        for key in self._defaults.keys():
+            if self._wrappers[key]:
+                print(key)
+            self._wrappers[key] = None
+
+
     def set_defaults(self) -> None:
         # Reset
         self.pause_on_load = True

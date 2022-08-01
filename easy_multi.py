@@ -213,6 +213,7 @@ class EasyMulti:
 
     def end_and_wait(self) -> None:
         if self._running:
+            self._options.disconnect_all_wrappers()
             self._logger.clear_callbacks()
             self._logger.add_callback(print)
             self._running = False
