@@ -1,3 +1,4 @@
+from genericpath import isfile
 import os, re, input_util, clear_util, threading, time
 from logger import Logger, PrintLogger
 from window import Window, get_all_mc_windows, get_current_window, get_window_by_dir
@@ -46,7 +47,11 @@ class EMMinecraftInstance:
         self._time_of_last_activity = 0
 
         self._create_world_key = None
+        self._leave_preview_key = None
         self._mc_version = None
+
+        # 0 = no atum, 1 = old atum (use leave preview), 2 = modern atum (create world key)
+        self._atum_level = 2
 
         self._tick_lock = threading.Lock()
         self._reset_lock = threading.Lock()
@@ -85,6 +90,12 @@ class EMMinecraftInstance:
             return self._create_world_key
         self._create_world_key = self._get_key("key_Create New World")
         return self._create_world_key
+
+    def _get_leave_preview_key(self) -> Union[int, None]:
+        if self._leave_preview_key:
+            return self._leave_preview_key
+        self._leave_preview_key = self._get_key("key_Leave Preview")
+        return self._leave_preview_key
 
     def wait_for_all_activity(self) -> None:
         locks = (self._log_lock, self._tick_lock,
@@ -133,10 +144,18 @@ class EMMinecraftInstance:
             if mc_version[1] < 14:
                 self._window.press_reset_keys()
             else:
-                if self._get_create_world_key() is not None:
+                if self._atum_level >= 2 and self._get_create_world_key() is not None:
                     self._window.press_key(self._get_create_world_key())
                 else:
-                    self.log("!!! No create world key is set!!!")
+                    if self._atum_level >= 1 and self._get_leave_preview_key():
+                        self._atum_level = 1
+                        if not self._loaded_world and self._loaded_preview:
+                            self._window.press_key(
+                                self._get_leave_preview_key())
+                        else:
+                            self._window.press_reset_keys()
+                    else:
+                        self._atum_level = 0
 
             self._pause_on_load = self._options["pause_on_load"] and not single_instance
 
@@ -230,21 +249,25 @@ class EMMinecraftInstance:
     def get_next_log_lines(self) -> List[str]:
         with self._log_lock:
             line_list = []
-            with open(self.get_log_path(), "rb") as f:
-                f.seek(self._log_progress, 0)
-                f_rbytes = f.read()
-                self._log_progress += len(f_rbytes)
-            f_text = f_rbytes.decode()
-            for line in f_text.splitlines():
-                line_list.append(line.rstrip())
-            while "" in line_list:
-                line_list.remove("")
+            if os.path.isfile(self.get_log_path()):
+                with open(self.get_log_path(), "rb") as f:
+                    f.seek(self._log_progress, 0)
+                    f_rbytes = f.read()
+                    self._log_progress += len(f_rbytes)
+                f_text = f_rbytes.decode()
+                for line in f_text.splitlines():
+                    line_list.append(line.rstrip())
+                while "" in line_list:
+                    line_list.remove("")
             return line_list
 
     def jump_log_progress(self) -> None:
         with self._log_lock:
-            with open(self.get_log_path(), "rb") as f:
-                self._log_progress = len(f.read())
+            if os.path.isfile(self.get_log_path()):
+                with open(self.get_log_path(), "rb") as f:
+                    self._log_progress = len(f.read())
+            else:
+                self._log_progress = 0
 
     def get_log_path(self) -> str:
         return os.path.join(self._game_dir, "logs", "latest.log")

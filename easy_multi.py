@@ -75,7 +75,7 @@ class EasyMulti:
 
     def remove_instance(self, instance_num: int) -> None:
         inst = self._mc_instances.pop(instance_num)
-        if inst.has_window():
+        if inst.has_window(True):
             inst.get_window().revert_title()
         self.log(f"Removed Instance: {inst.get_name()}")
         self._options["last_instances"] = [
