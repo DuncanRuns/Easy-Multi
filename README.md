@@ -1,3 +1,6 @@
+# This project has been superseded by [Julti](https://github.com/DuncanRuns/Julti), Usage of Easy Multi is not recommended
+
+
 # Easy Multi
 Extremely easy multi/single instancing software for minecraft speedrunning.
 
